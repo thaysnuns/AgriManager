@@ -1,50 +1,83 @@
-import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// App.js
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, View, Text } from 'react-native';
+import LoginScreen from './components/LoginScreen';
+import RegisterScreen from './components/RegisterScreen';
+import HomeScreen from './components/HomeScreen';
+import CamposScreen from './components/CamposScreen';
+import BottomNav from './components/BottomNav';
 
 export default function App() {
+  const [currentScreen, setCurrentScreen] = useState('login');
+  const [activeTab, setActiveTab] = useState('inicio');
+
+  // LoginScreen
+  if (currentScreen === 'login') {
+    return (
+      <SafeAreaView style={styles.authContainer}>
+        <LoginScreen
+          onNavigateToRegister={() => setCurrentScreen('register')}
+          onLoginSuccess={() => setCurrentScreen('home')}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // RegisterScreen
+  if (currentScreen === 'register') {
+    return (
+      <SafeAreaView style={styles.authContainer}>
+        <RegisterScreen
+          onBackToLogin={() => setCurrentScreen('login')}
+          onRegisterSuccess={() => setCurrentScreen('home')}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.card}>
-        <Ionicons name="leaf" size={32} color="#059669" />
-        <Text style={styles.title}>Agri Manager</Text>
-        <Text style={styles.subtitle}>Componente isolado a funcionar a 100%!</Text>
+    <SafeAreaView style={styles.appContainer}>
+      <View style={styles.mainContent}>
+        {/* HomeScreen */}
+        {activeTab === 'inicio' && <HomeScreen />}
+
+        {/* CamposScreen */}
+        {activeTab === 'campos' && <CamposScreen />}
+
+        {/* Outras abas */}
+        {activeTab !== 'inicio' && activeTab !== 'campos' && (
+          <View style={styles.placeholder}>
+            <Text style={styles.placeholderText}>{activeTab.toUpperCase()}</Text>
+          </View>
+        )}
       </View>
+
+      {/* BottomNav */}
+      <BottomNav activeTab={activeTab} onSelectTab={setActiveTab} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  authContainer: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f8fafc',
+  },
+  appContainer: {
+    flex: 1,
+    backgroundColor: '#F4F6F3',
+  },
+  mainContent: {
+    flex: 1,
+  },
+  placeholder: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
-  card: {
-    backgroundColor: '#fff',
-    padding: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 320,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#064e3b',
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    textAlign: 'center',
+  placeholderText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1B3B2B',
   },
 });
