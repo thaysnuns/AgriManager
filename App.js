@@ -5,6 +5,8 @@ import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
 import HomeScreen from './components/HomeScreen';
 import CamposScreen from './components/CamposScreen';
+import PlantacoesScreen from './components/PlantacoesScreen';
+import TarefasScreen from './components/TarefasScreen';
 import BottomNav from './components/BottomNav';
 
 export default function App() {
@@ -44,10 +46,16 @@ export default function App() {
         {/* CamposScreen */}
         {activeTab === 'campos' && <CamposScreen />}
 
-        {/* Outras abas */}
-        {activeTab !== 'inicio' && activeTab !== 'campos' && (
+        {/* PlantacoesScreen */}
+        {activeTab === 'plantacoes' && <PlantacoesScreen />}
+
+        {/* TarefasScreen */}
+        {activeTab === 'tarefas' && <TarefasScreen />}
+
+        {/* Perfil */}
+        {activeTab === 'perfil' && (
           <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>{activeTab.toUpperCase()}</Text>
+            <Text style={styles.placeholderText}>PERFIL</Text>
           </View>
         )}
       </View>

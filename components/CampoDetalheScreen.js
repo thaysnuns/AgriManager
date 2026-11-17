@@ -1,5 +1,5 @@
 // components/CampoDetalheScreen.js
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,9 +9,16 @@ import {
   ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import ParcelasScreen from './ParcelasScreen';
 
 export default function CampoDetalheScreen({ campo, onBack }) {
-  // Dados dinâmicos consoante o campo clicado (com valores exatos da imagem para Olival Norte)
+  const [showParcelas, setShowParcelas] = useState(false);
+
+  // Se clicou numa parcela ou em "Ver 4", abre o ecrã Parcelas
+  if (showParcelas) {
+    return <ParcelasScreen onBack={() => setShowParcelas(false)} />;
+  }
+
   const isOlival = !campo || campo.nome === 'Olival Norte';
   const isVinha = campo?.nome === 'Vinha do Poente';
 
@@ -91,7 +98,7 @@ export default function CampoDetalheScreen({ campo, onBack }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Cabeçalho com botão voltar, título e botões de menu */}
+      {/* Cabeçalho */}
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <Ionicons name="arrow-back" size={20} color="#1E2923" />
@@ -112,7 +119,7 @@ export default function CampoDetalheScreen({ campo, onBack }) {
         </View>
       </View>
 
-      {/* Imagem aérea do campo */}
+      {/* Imagem aérea */}
       <View style={styles.mapCardWrapper}>
         <ImageBackground
           source={{
@@ -132,7 +139,7 @@ export default function CampoDetalheScreen({ campo, onBack }) {
         </ImageBackground>
       </View>
 
-      {/* Etiquetas (Saudável, 4 parcelas, Oliveira Galega) */}
+      {/* Etiquetas */}
       <View style={styles.tagsRow}>
         <View
           style={[
@@ -165,7 +172,7 @@ export default function CampoDetalheScreen({ campo, onBack }) {
         </View>
       </View>
 
-      {/* Cartões de Métricas (Humidade e Vigor médio) */}
+      {/* Métricas */}
       <View style={styles.metricsRow}>
         <View style={styles.metricCard}>
           <View style={[styles.metricIconBox, { backgroundColor: '#E2ECF5' }]}>
@@ -190,16 +197,21 @@ export default function CampoDetalheScreen({ campo, onBack }) {
         </View>
       </View>
 
-      {/* Secção: Parcelas */}
+      {/* Secção: Parcelas (Clicáveis) */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Parcelas</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowParcelas(true)}>
           <Text style={styles.seeAllLink}>{verTotal}</Text>
         </TouchableOpacity>
       </View>
 
       {parcelas.map((item) => (
-        <View key={item.id} style={styles.parcelaCard}>
+        <TouchableOpacity
+          key={item.id}
+          style={styles.parcelaCard}
+          activeOpacity={0.8}
+          onPress={() => setShowParcelas(true)}
+        >
           <View style={[styles.parcelaIconBox, { backgroundColor: item.iconBg }]}>
             <Ionicons name="layers-outline" size={22} color={item.iconColor} />
           </View>
@@ -212,7 +224,7 @@ export default function CampoDetalheScreen({ campo, onBack }) {
           <Text style={[styles.parcelaBadge, { color: item.badgeColor }]}>
             {item.badge}
           </Text>
-        </View>
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );
