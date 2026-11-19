@@ -1,6 +1,6 @@
 // App.js
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, View, Text } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
 import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
 import HomeScreen from './components/HomeScreen';
@@ -8,6 +8,7 @@ import CamposScreen from './components/CamposScreen';
 import PlantacoesScreen from './components/PlantacoesScreen';
 import TarefasScreen from './components/TarefasScreen';
 import PerfilScreen from './components/PerfilScreen';
+import OperadoresScreen from './components/OperadoresScreen';
 import BottomNav from './components/BottomNav';
 
 export default function App() {
@@ -55,9 +56,7 @@ export default function App() {
         )}
 
         {activeTab === 'perfil' && subScreen === 'operadores' && (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>OPERADORES (EM BREVE)</Text>
-          </View>
+          <OperadoresScreen onBack={() => setSubScreen(null)} />
         )}
       </View>
 
@@ -77,15 +76,5 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
-  },
-  placeholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1B3B2B',
   },
 });
