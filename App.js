@@ -5,16 +5,20 @@ import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
 import HomeScreen from './components/HomeScreen';
 import CamposScreen from './components/CamposScreen';
+import CriarCamposScreen from './components/CriarCamposScreen';
 import PlantacoesScreen from './components/PlantacoesScreen';
 import TarefasScreen from './components/TarefasScreen';
 import PerfilScreen from './components/PerfilScreen';
 import OperadoresScreen from './components/OperadoresScreen';
+import RegistarOperadorScreen from './components/RegistarOperadorScreen';
 import BottomNav from './components/BottomNav';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
   const [activeTab, setActiveTab] = useState('inicio');
   const [subScreen, setSubScreen] = useState(null);
+  const [ultimoOperador, setUltimoOperador] = useState(null);
+  const [novoCampo, setNovoCampo] = useState(null);
 
   if (currentScreen === 'login') {
     return (
@@ -43,11 +47,32 @@ export default function App() {
     setSubScreen(null);
   };
 
+  const abrirCriarCampo = () => setSubScreen('criar-campo');
+
   return (
     <SafeAreaView style={styles.appContainer}>
       <View style={styles.mainContent}>
         {activeTab === 'inicio' && <HomeScreen />}
-        {activeTab === 'campos' && <CamposScreen />}
+
+        {activeTab === 'campos' && !subScreen && (
+          <CamposScreen
+            onOpenCriarCampo={abrirCriarCampo}
+            onAddCampo={abrirCriarCampo}
+            onPressAdd={abrirCriarCampo}
+            novoCampo={novoCampo}
+          />
+        )}
+
+        {activeTab === 'campos' && subScreen === 'criar-campo' && (
+          <CriarCamposScreen
+            onBack={() => setSubScreen(null)}
+            onCampoCriado={(campo) => {
+              setNovoCampo(campo);
+              setSubScreen(null);
+            }}
+          />
+        )}
+
         {activeTab === 'plantacoes' && <PlantacoesScreen />}
         {activeTab === 'tarefas' && <TarefasScreen />}
 
@@ -56,7 +81,21 @@ export default function App() {
         )}
 
         {activeTab === 'perfil' && subScreen === 'operadores' && (
-          <OperadoresScreen onBack={() => setSubScreen(null)} />
+          <OperadoresScreen
+            onBack={() => setSubScreen(null)}
+            onAddOperador={() => setSubScreen('registar-operador')}
+            novoOperador={ultimoOperador}
+          />
+        )}
+
+        {activeTab === 'perfil' && subScreen === 'registar-operador' && (
+          <RegistarOperadorScreen
+            onBack={() => setSubScreen('operadores')}
+            onOperadorRegistado={(dados) => {
+              setUltimoOperador(dados);
+              setSubScreen('operadores');
+            }}
+          />
         )}
       </View>
 

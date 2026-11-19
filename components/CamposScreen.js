@@ -1,5 +1,5 @@
 // components/CamposScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -51,10 +51,36 @@ const CAMPOS_DATA = [
   },
 ];
 
-export default function CamposScreen() {
+const getIconByCultura = (cultura) => {
+  const c = (cultura || '').toLowerCase();
+  if (c.includes('vinha')) return 'fruit-grapes-outline';
+  if (c.includes('cereal')) return 'barley';
+  if (c.includes('horta') || c.includes('pomar')) return 'sprout-outline';
+  return 'pine-tree';
+};
+
+export default function CamposScreen({ onOpenCriarCampo, novoCampo }) {
+  const [campos, setCampos] = useState(CAMPOS_DATA);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('todos');
   const [selectedCampo, setSelectedCampo] = useState(null);
+
+  useEffect(() => {
+    if (!novoCampo) return;
+    const criado = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      nome: novoCampo.nome,
+      detalhe: `${novoCampo.areaFormatada} · 0 parcelas`,
+      estado: 'Saudável',
+      indicador: novoCampo.cultura,
+      tipo: 'ativo',
+      iconName: getIconByCultura(novoCampo.cultura),
+      iconBg: '#E3ECE6',
+      iconColor: '#1B3B2B',
+      indicadorColor: '#2D6A4F',
+    };
+    setCampos((prev) => [criado, ...prev]);
+  }, [novoCampo]);
 
   // Se um campo foi clicado, abre o ecrã de detalhe
   if (selectedCampo) {
@@ -66,7 +92,7 @@ export default function CamposScreen() {
     );
   }
 
-  const camposFiltrados = CAMPOS_DATA.filter((campo) => {
+  const camposFiltrados = campos.filter((campo) => {
     const matchesSearch = campo.nome.toLowerCase().includes(searchQuery.toLowerCase());
     if (activeFilter === 'ativos') return matchesSearch && campo.tipo === 'ativo';
     if (activeFilter === 'atencao') return matchesSearch && campo.tipo === 'atencao';
@@ -81,7 +107,11 @@ export default function CamposScreen() {
           <Text style={styles.title}>Campos</Text>
           <Text style={styles.subtitle}>6 campos · 128,4 hectares</Text>
         </View>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={onOpenCriarCampo}
+          activeOpacity={0.8}
+        >
           <Ionicons name="add" size={24} color="#1E2923" />
         </TouchableOpacity>
       </View>

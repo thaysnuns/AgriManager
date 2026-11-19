@@ -1,5 +1,5 @@
 // components/OperadoresScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Modal,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -31,19 +30,37 @@ const CONVITES_INICIAIS = [
   { id: 'c3', iniciais: 'NC', nome: 'Nuno Carvalho', email: 'nuno@quintadovale.pt', estado: 'Pendente' },
 ];
 
-export default function OperadoresScreen({ onBack }) {
+export default function OperadoresScreen({ onBack, onAddOperador, novoOperador }) {
   const [operadores, setOperadores] = useState(OPERADORES_INICIAIS);
-  const [convites, setConvites] = useState(CONVITES_INICIAIS);
-  const [abaAtiva, setAbaAtiva] = useState('operadores'); // 'operadores' | 'convites'
+  const [convites] = useState(CONVITES_INICIAIS);
+  const [abaAtiva, setAbaAtiva] = useState('operadores');
   const [pesquisa, setPesquisa] = useState('');
   const [pagina, setPagina] = useState(1);
 
-  // Modal Adicionar Operador
-  const [modalVisible, setModalVisible] = useState(false);
-  const [novoNome, setNovoNome] = useState('');
-  const [novoEmail, setNovoEmail] = useState('');
-
   const itensPorPagina = 4;
+
+  useEffect(() => {
+    if (!novoOperador) return;
+    const partes = novoOperador.nome.trim().split(/\s+/).filter(Boolean);
+    const iniciais =
+      partes.length === 0
+        ? 'OP'
+        : partes.length === 1
+        ? partes[0].slice(0, 2).toUpperCase()
+        : (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+
+    const criado = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      iniciais,
+      nome: novoOperador.nome.trim(),
+      email: novoOperador.email.trim().toLowerCase(),
+      estado: 'Ativo',
+    };
+
+    setOperadores((prev) => [criado, ...prev]);
+    setAbaAtiva('operadores');
+    setPagina(1);
+  }, [novoOperador]);
 
   const listaAtual = abaAtiva === 'operadores' ? operadores : convites;
   const listaFiltrada = listaAtual.filter(
@@ -59,34 +76,9 @@ export default function OperadoresScreen({ onBack }) {
   const fimIdx = Math.min(inicioIdx + itensPorPagina, totalItens);
   const itensPaginados = listaFiltrada.slice(inicioIdx, fimIdx);
 
-  const gerarIniciais = (nome) => {
-    const partes = nome.trim().split(/\s+/).filter(Boolean);
-    if (partes.length === 0) return 'OP';
-    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
-    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
-  };
-
-  const handleAdicionarOperador = () => {
-    if (!novoNome.trim() || !novoEmail.trim()) return;
-    const novo = {
-      id: String(Date.now()),
-      iniciais: gerarIniciais(novoNome),
-      nome: novoNome.trim(),
-      email: novoEmail.trim().toLowerCase(),
-      estado: 'Ativo',
-    };
-    setOperadores((prev) => [novo, ...prev]);
-    setNovoNome('');
-    setNovoEmail('');
-    setAbaAtiva('operadores');
-    setPagina(1);
-    setModalVisible(false);
-  };
-
   return (
     <View style={styles.wrapper}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Cabeçalho com botão Voltar */}
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
             <Ionicons name="arrow-back" size={20} color="#1E2923" />
@@ -97,7 +89,6 @@ export default function OperadoresScreen({ onBack }) {
           </View>
         </View>
 
-        {/* Cartão Escuro: Quinta do Vale */}
         <View style={styles.farmCard}>
           <View style={styles.farmIconBox}>
             <MaterialCommunityIcons name="office-building-outline" size={22} color="#1B3B2B" />
@@ -110,17 +101,15 @@ export default function OperadoresScreen({ onBack }) {
           </View>
         </View>
 
-        {/* Botão Largo: Adicionar operador */}
         <TouchableOpacity
           style={styles.addBannerButton}
-          onPress={() => setModalVisible(true)}
+          onPress={onAddOperador}
           activeOpacity={0.85}
         >
           <Ionicons name="person-add-outline" size={20} color="#FFFFFF" />
           <Text style={styles.addBannerText}>Adicionar operador</Text>
         </TouchableOpacity>
 
-        {/* Barra de Pesquisa */}
         <View style={styles.searchBox}>
           <Ionicons name="search-outline" size={19} color="#6B7871" style={{ marginRight: 8 }} />
           <TextInput
@@ -135,7 +124,6 @@ export default function OperadoresScreen({ onBack }) {
           />
         </View>
 
-        {/* Abas / Filtros: Operadores 11 | Convites 3 */}
         <View style={styles.tabsRow}>
           <TouchableOpacity
             style={[styles.tabPill, abaAtiva === 'operadores' && styles.tabPillActive]}
@@ -162,7 +150,6 @@ export default function OperadoresScreen({ onBack }) {
           </TouchableOpacity>
         </View>
 
-        {/* Lista de Operadores / Convites */}
         {itensPaginados.map((item) => {
           const isAtivo = item.estado === 'Ativo';
           return (
@@ -196,7 +183,6 @@ export default function OperadoresScreen({ onBack }) {
           );
         })}
 
-        {/* Rodapé de Paginação: 1–4 de 11 operadores */}
         <View style={styles.paginationRow}>
           <Text style={styles.paginationText}>
             {totalItens === 0
@@ -233,49 +219,6 @@ export default function OperadoresScreen({ onBack }) {
           </View>
         </View>
       </ScrollView>
-
-      {/* Modal para Adicionar Operador */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Adicionar operador</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#1E2923" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.inputLabel}>Nome completo</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ex.: Carlos Mendes"
-              placeholderTextColor="#94A3B8"
-              value={novoNome}
-              onChangeText={setNovoNome}
-            />
-
-            <Text style={styles.inputLabel}>E-mail</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ex.: carlos@quintadovale.pt"
-              placeholderTextColor="#94A3B8"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={novoEmail}
-              onChangeText={setNovoEmail}
-            />
-
-            <TouchableOpacity style={styles.modalSubmit} onPress={handleAdicionarOperador}>
-              <Text style={styles.modalSubmitText}>Guardar operador</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -479,57 +422,5 @@ const styles = StyleSheet.create({
   },
   pageBtnDisabled: {
     backgroundColor: '#F4F6F3',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
-    justifyContent: 'flex-end',
-  },
-  modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    paddingBottom: 32,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1E2923',
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#334155',
-    marginTop: 10,
-    marginBottom: 6,
-  },
-  modalInput: {
-    backgroundColor: '#F4F6F3',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 14,
-    color: '#1E2923',
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-  },
-  modalSubmit: {
-    backgroundColor: '#1B3B2B',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 18,
-  },
-  modalSubmitText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
   },
 });
