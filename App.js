@@ -7,13 +7,14 @@ import HomeScreen from './components/HomeScreen';
 import CamposScreen from './components/CamposScreen';
 import PlantacoesScreen from './components/PlantacoesScreen';
 import TarefasScreen from './components/TarefasScreen';
+import PerfilScreen from './components/PerfilScreen';
 import BottomNav from './components/BottomNav';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
   const [activeTab, setActiveTab] = useState('inicio');
+  const [subScreen, setSubScreen] = useState(null);
 
-  // LoginScreen
   if (currentScreen === 'login') {
     return (
       <SafeAreaView style={styles.authContainer}>
@@ -25,7 +26,6 @@ export default function App() {
     );
   }
 
-  // RegisterScreen
   if (currentScreen === 'register') {
     return (
       <SafeAreaView style={styles.authContainer}>
@@ -37,31 +37,31 @@ export default function App() {
     );
   }
 
+  const handleSelectTab = (tab) => {
+    setActiveTab(tab);
+    setSubScreen(null);
+  };
+
   return (
     <SafeAreaView style={styles.appContainer}>
       <View style={styles.mainContent}>
-        {/* HomeScreen */}
         {activeTab === 'inicio' && <HomeScreen />}
-
-        {/* CamposScreen */}
         {activeTab === 'campos' && <CamposScreen />}
-
-        {/* PlantacoesScreen */}
         {activeTab === 'plantacoes' && <PlantacoesScreen />}
-
-        {/* TarefasScreen */}
         {activeTab === 'tarefas' && <TarefasScreen />}
 
-        {/* Perfil */}
-        {activeTab === 'perfil' && (
+        {activeTab === 'perfil' && !subScreen && (
+          <PerfilScreen onOpenOperadores={() => setSubScreen('operadores')} />
+        )}
+
+        {activeTab === 'perfil' && subScreen === 'operadores' && (
           <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>PERFIL</Text>
+            <Text style={styles.placeholderText}>OPERADORES (EM BREVE)</Text>
           </View>
         )}
       </View>
 
-      {/* BottomNav */}
-      <BottomNav activeTab={activeTab} onSelectTab={setActiveTab} />
+      <BottomNav activeTab={activeTab} onSelectTab={handleSelectTab} />
     </SafeAreaView>
   );
 }
