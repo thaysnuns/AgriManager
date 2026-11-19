@@ -7,6 +7,8 @@ import HomeScreen from './components/HomeScreen';
 import CamposScreen from './components/CamposScreen';
 import CriarCamposScreen from './components/CriarCamposScreen';
 import EditarCamposScreen from './components/EditarCamposScreen';
+import CriarParcelaScreen from './components/CriarParcelaScreen';
+import EditarParcelaScreen from './components/EditarParcelaScreen';
 import PlantacoesScreen from './components/PlantacoesScreen';
 import TarefasScreen from './components/TarefasScreen';
 import PerfilScreen from './components/PerfilScreen';
@@ -22,6 +24,10 @@ export default function App() {
   const [novoCampo, setNovoCampo] = useState(null);
   const [campoEmEdicao, setCampoEmEdicao] = useState(null);
   const [campoEditado, setCampoEditado] = useState(null);
+  const [campoParcelaContexto, setCampoParcelaContexto] = useState(null);
+  const [novaParcela, setNovaParcela] = useState(null);
+  const [parcelaEmEdicao, setParcelaEmEdicao] = useState(null);
+  const [parcelaEditada, setParcelaEditada] = useState(null);
 
   if (currentScreen === 'login') {
     return (
@@ -57,6 +63,16 @@ export default function App() {
     setSubScreen('editar-campo');
   };
 
+  const abrirCriarParcela = (nomeCampo = null) => {
+    setCampoParcelaContexto(nomeCampo);
+    setSubScreen('criar-parcela');
+  };
+
+  const abrirEditarParcela = (parcela) => {
+    setParcelaEmEdicao(parcela);
+    setSubScreen('editar-parcela');
+  };
+
   return (
     <SafeAreaView style={styles.appContainer}>
       <View style={styles.mainContent}>
@@ -68,8 +84,12 @@ export default function App() {
             onAddCampo={abrirCriarCampo}
             onPressAdd={abrirCriarCampo}
             onEditCampo={abrirEditarCampo}
+            onOpenCriarParcela={abrirCriarParcela}
+            onEditParcela={abrirEditarParcela}
             novoCampo={novoCampo}
             campoEditado={campoEditado}
+            novaParcela={novaParcela}
+            parcelaEditada={parcelaEditada}
           />
         )}
 
@@ -89,6 +109,28 @@ export default function App() {
             onBack={() => setSubScreen(null)}
             onGuardarAlteracoes={(atualizado) => {
               setCampoEditado(atualizado);
+              setSubScreen(null);
+            }}
+          />
+        )}
+
+        {activeTab === 'campos' && subScreen === 'criar-parcela' && (
+          <CriarParcelaScreen
+            campoInicial={campoParcelaContexto}
+            onBack={() => setSubScreen(null)}
+            onParcelaCriada={(parcela) => {
+              setNovaParcela(parcela);
+              setSubScreen(null);
+            }}
+          />
+        )}
+
+        {activeTab === 'campos' && subScreen === 'editar-parcela' && (
+          <EditarParcelaScreen
+            parcela={parcelaEmEdicao}
+            onBack={() => setSubScreen(null)}
+            onGuardarAlteracoes={(atualizada) => {
+              setParcelaEditada(atualizada);
               setSubScreen(null);
             }}
           />

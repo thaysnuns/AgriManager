@@ -62,8 +62,12 @@ const getIconByCultura = (cultura) => {
 export default function CamposScreen({
   onOpenCriarCampo,
   onEditCampo,
+  onOpenCriarParcela,
+  onEditParcela,
   novoCampo,
   campoEditado,
+  novaParcela,
+  parcelaEditada,
 }) {
   const [campos, setCampos] = useState(CAMPOS_DATA);
   const [searchQuery, setSearchQuery] = useState('');
@@ -115,6 +119,10 @@ export default function CamposScreen({
       <CampoDetalheScreen
         campo={selectedCampo}
         onBack={() => setSelectedCampo(null)}
+        onOpenCriarParcela={onOpenCriarParcela}
+        onEditParcela={onEditParcela}
+        novaParcela={novaParcela}
+        parcelaEditada={parcelaEditada}
       />
     );
   }

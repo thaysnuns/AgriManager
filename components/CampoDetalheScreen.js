@@ -11,12 +11,28 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import ParcelasScreen from './ParcelasScreen';
 
-export default function CampoDetalheScreen({ campo, onBack }) {
+export default function CampoDetalheScreen({
+  campo,
+  onBack,
+  onOpenCriarParcela,
+  onEditParcela,
+  novaParcela,
+  parcelaEditada,
+}) {
   const [showParcelas, setShowParcelas] = useState(false);
 
   // Se clicou numa parcela ou em "Ver 4", abre o ecrã Parcelas
   if (showParcelas) {
-    return <ParcelasScreen onBack={() => setShowParcelas(false)} />;
+    return (
+      <ParcelasScreen
+        campo={campo}
+        onBack={() => setShowParcelas(false)}
+        onOpenCriarParcela={onOpenCriarParcela}
+        onEditParcela={onEditParcela}
+        novaParcela={novaParcela}
+        parcelaEditada={parcelaEditada}
+      />
+    );
   }
 
   const isOlival = !campo || campo.nome === 'Olival Norte';
