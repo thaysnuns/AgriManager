@@ -59,7 +59,12 @@ const getIconByCultura = (cultura) => {
   return 'pine-tree';
 };
 
-export default function CamposScreen({ onOpenCriarCampo, novoCampo }) {
+export default function CamposScreen({
+  onOpenCriarCampo,
+  onEditCampo,
+  novoCampo,
+  campoEditado,
+}) {
   const [campos, setCampos] = useState(CAMPOS_DATA);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('todos');
@@ -78,9 +83,31 @@ export default function CamposScreen({ onOpenCriarCampo, novoCampo }) {
       iconBg: '#E3ECE6',
       iconColor: '#1B3B2B',
       indicadorColor: '#2D6A4F',
+      cultura: novoCampo.cultura,
+      localizacao: novoCampo.localizacao,
+      observacoes: novoCampo.observacoes,
+      area: novoCampo.area,
     };
     setCampos((prev) => [criado, ...prev]);
   }, [novoCampo]);
+
+  useEffect(() => {
+    if (!campoEditado) return;
+    setCampos((prev) =>
+      prev.map((item) =>
+        item.id === campoEditado.id
+          ? {
+              ...item,
+              ...campoEditado,
+              iconName: campoEditado.cultura
+                ? getIconByCultura(campoEditado.cultura)
+                : item.iconName,
+              indicador: campoEditado.cultura || item.indicador,
+            }
+          : item
+      )
+    );
+  }, [campoEditado]);
 
   // Se um campo foi clicado, abre o ecrã de detalhe
   if (selectedCampo) {
@@ -208,10 +235,21 @@ export default function CamposScreen({ onOpenCriarCampo, novoCampo }) {
           </View>
 
           <View style={styles.actionsColumn}>
-            <TouchableOpacity style={styles.editBtn} onPress={() => setSelectedCampo(campo)}>
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={(e) => {
+                e?.stopPropagation?.();
+                if (onEditCampo) onEditCampo(campo);
+              }}
+            >
               <Ionicons name="pencil" size={14} color="#1B3B2B" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.deleteBtn}>
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={(e) => {
+                e?.stopPropagation?.();
+              }}
+            >
               <Ionicons name="trash-outline" size={14} color="#C26D1F" />
             </TouchableOpacity>
           </View>

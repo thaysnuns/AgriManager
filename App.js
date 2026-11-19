@@ -6,6 +6,7 @@ import RegisterScreen from './components/RegisterScreen';
 import HomeScreen from './components/HomeScreen';
 import CamposScreen from './components/CamposScreen';
 import CriarCamposScreen from './components/CriarCamposScreen';
+import EditarCamposScreen from './components/EditarCamposScreen';
 import PlantacoesScreen from './components/PlantacoesScreen';
 import TarefasScreen from './components/TarefasScreen';
 import PerfilScreen from './components/PerfilScreen';
@@ -19,6 +20,8 @@ export default function App() {
   const [subScreen, setSubScreen] = useState(null);
   const [ultimoOperador, setUltimoOperador] = useState(null);
   const [novoCampo, setNovoCampo] = useState(null);
+  const [campoEmEdicao, setCampoEmEdicao] = useState(null);
+  const [campoEditado, setCampoEditado] = useState(null);
 
   if (currentScreen === 'login') {
     return (
@@ -49,6 +52,11 @@ export default function App() {
 
   const abrirCriarCampo = () => setSubScreen('criar-campo');
 
+  const abrirEditarCampo = (campo) => {
+    setCampoEmEdicao(campo);
+    setSubScreen('editar-campo');
+  };
+
   return (
     <SafeAreaView style={styles.appContainer}>
       <View style={styles.mainContent}>
@@ -59,7 +67,9 @@ export default function App() {
             onOpenCriarCampo={abrirCriarCampo}
             onAddCampo={abrirCriarCampo}
             onPressAdd={abrirCriarCampo}
+            onEditCampo={abrirEditarCampo}
             novoCampo={novoCampo}
+            campoEditado={campoEditado}
           />
         )}
 
@@ -68,6 +78,17 @@ export default function App() {
             onBack={() => setSubScreen(null)}
             onCampoCriado={(campo) => {
               setNovoCampo(campo);
+              setSubScreen(null);
+            }}
+          />
+        )}
+
+        {activeTab === 'campos' && subScreen === 'editar-campo' && (
+          <EditarCamposScreen
+            campo={campoEmEdicao}
+            onBack={() => setSubScreen(null)}
+            onGuardarAlteracoes={(atualizado) => {
+              setCampoEditado(atualizado);
               setSubScreen(null);
             }}
           />
