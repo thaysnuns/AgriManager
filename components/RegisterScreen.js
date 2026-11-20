@@ -1,108 +1,312 @@
 // components/RegisterScreen.js
-import React from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import BrandLogo from './ui/BrandLogo';
+import AuthInput from './ui/AuthInput';
+import PrimaryButton from './ui/PrimaryButton';
+
+const ROLES = [
+  { key: 'agricultor', label: 'Agricultor', icon: 'tractor-variant' },
+  { key: 'operador', label: 'Operador', icon: 'hard-hat' },
+  { key: 'administrador', label: 'Administrador', icon: 'shield-check-outline' },
+];
 
 export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
+  const [role, setRole] = useState('agricultor');
+  const [nomeCompleto, setNomeCompleto] = useState('Maria Costa');
+  const [empresa, setEmpresa] = useState('Quinta do Vale');
+  const [nifEmpresa, setNifEmpresa] = useState('509123456');
+  const [moradaEmpresa, setMoradaEmpresa] = useState('Rua do Vale, 12');
+  const [emailProfissional, setEmailProfissional] = useState('maria.costa@quintadovale.pt');
+  const [password, setPassword] = useState('•••••••••••');
+  const [aceitouTermos, setAceitouTermos] = useState(true);
+  const [erro, setErro] = useState('');
+
+  const handleContinuar = () => {
+    if (!nomeCompleto.trim() || !emailProfissional.trim() || !password.trim()) {
+      setErro('Preencha os seus dados pessoais e credenciais de acesso.');
+      return;
+    }
+
+    if (role === 'agricultor' && (!empresa.trim() || !nifEmpresa.trim() || !moradaEmpresa.trim())) {
+      setErro('Os dados fiscais da empresa (nome, NIF e morada) são obrigatórios.');
+      return;
+    }
+
+    if (!aceitouTermos) {
+      setErro('É necessário aceitar os Termos de Utilização e a Política de Privacidade.');
+      return;
+    }
+
+    setErro('');
+    if (onRegisterSuccess) {
+      onRegisterSuccess({
+        role,
+        nomeCompleto: nomeCompleto.trim(),
+        empresa: empresa.trim(),
+        nifEmpresa: nifEmpresa.trim(),
+        moradaEmpresa: moradaEmpresa.trim(),
+        email: emailProfissional.trim(),
+      });
+    }
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Topo com botão voltar e logótipo */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={onBackToLogin} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color="#1e293b" />
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* Cabeçalho Superior */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={onBackToLogin}>
+          <Ionicons name="arrow-back" size={19} color="#1E2923" />
         </TouchableOpacity>
-        <View style={styles.brandRow}>
-          <View style={styles.logoIcon}>
-            <Ionicons name="leaf" size={16} color="#064e3b" />
-          </View>
-          <Text style={styles.brandTitle}>Terra Clara</Text>
-        </View>
+        <BrandLogo size="sm" />
       </View>
 
+      {/* Título e Subtítulo */}
       <Text style={styles.title}>Criar a sua conta</Text>
-      <Text style={styles.subtitle}>Configure a exploração em poucos passos. Pode convidar a equipa mais tarde.</Text>
+      <Text style={styles.subtitle}>
+        Configure a exploração em poucos passos. Pode convidar a equipa mais tarde.
+      </Text>
 
-      {/* Campos de Input */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>NOME COMPLETO</Text>
-        <View style={styles.inputBox}>
-          <Ionicons name="person-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-          <TextInput style={styles.inputText} defaultValue="Maria Costa" />
-        </View>
+      {/* Barra de Progresso (3 passos) */}
+      <View style={styles.progressRow}>
+        <View style={[styles.progressStep, styles.progressStepActive]} />
+        <View style={styles.progressStep} />
+        <View style={styles.progressStep} />
       </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>EMPRESA / EXPLORAÇÃO</Text>
-        <View style={styles.inputBox}>
-          <Ionicons name="business-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-          <TextInput style={styles.inputText} defaultValue="Quinta do Vale" />
-        </View>
+      {/* Seletor de Função */}
+      <Text style={styles.sectionLabel}>Qual é a sua função?</Text>
+      <View style={styles.rolesRow}>
+        {ROLES.map((item) => {
+          const ativa = role === item.key;
+          return (
+            <TouchableOpacity
+              key={item.key}
+              style={[styles.roleCard, ativa && styles.roleCardActive]}
+              onPress={() => setRole(item.key)}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons
+                name={item.icon}
+                size={21}
+                color={ativa ? '#244735' : '#6B7871'}
+              />
+              <Text style={[styles.roleText, ativa && styles.roleTextActive]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>NIF - empresa</Text>
-        <View style={styles.inputBox}>
-          <Ionicons name="card-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-          <TextInput style={styles.inputText} secureTextEntry defaultValue="••••••••" />
-        </View>
-      </View>
+      {/* Campos Pessoais e Fiscais da Empresa (RAC0a) */}
+      <AuthInput
+        label="NOME COMPLETO"
+        iconName="person-outline"
+        value={nomeCompleto}
+        onChangeText={setNomeCompleto}
+        placeholder="Maria Costa"
+      />
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>MORADA DA EMPRESA</Text>
-        <View style={styles.inputBox}>
-          <Ionicons name="location-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-          <TextInput style={styles.inputText} defaultValue="Rua do Vale, 12" />
-        </View>
-      </View>
+      {role !== 'administrador' && (
+        <>
+          <AuthInput
+            label="EMPRESA / EXPLORAÇÃO"
+            iconName="business-outline"
+            value={empresa}
+            onChangeText={setEmpresa}
+            placeholder="Quinta do Vale"
+          />
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>EMAIL PROFISSIONAL</Text>
-        <View style={styles.inputBox}>
-          <Ionicons name="mail-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-          <TextInput style={styles.inputText} defaultValue="maria.costa@quintadovale.pt" />
-        </View>
-      </View>
+          <AuthInput
+            label="NIF- empresa"
+            iconName="card-account-details-outline"
+            iconLibrary="mci"
+            value={nifEmpresa}
+            onChangeText={setNifEmpresa}
+            placeholder="509123456"
+            keyboardType="numeric"
+            secureTextEntry
+          />
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>PALAVRA-PASSE</Text>
-        <View style={styles.inputBox}>
-          <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-          <TextInput style={styles.inputText} secureTextEntry defaultValue="••••••••" />
-        </View>
-      </View>
+          <AuthInput
+            label="MORADA DA EMPRESA"
+            iconName="business-outline"
+            value={moradaEmpresa}
+            onChangeText={setMoradaEmpresa}
+            placeholder="Rua do Vale, 12"
+          />
+        </>
+      )}
 
-      {/* Termos e Condições */}
-      <View style={styles.termsRow}>
-        <View style={styles.checkboxActive}>
-          <Ionicons name="checkmark" size={12} color="#fff" />
-        </View>
-        <Text style={styles.termsText}>Aceito os Termos de Utilização e a Política de Privacidade.</Text>
-      </View>
+      <AuthInput
+        label="EMAIL PROFISSIONAL"
+        iconName="mail-outline"
+        value={emailProfissional}
+        onChangeText={setEmailProfissional}
+        placeholder="maria.costa@quintadovale.pt"
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
 
-      <TouchableOpacity style={styles.primaryButton} onPress={onRegisterSuccess}>
-        <Text style={styles.primaryButtonText}>→ Continuar</Text>
+      <AuthInput
+        label="PALAVRA-PASSE"
+        iconName="lock-closed-outline"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="•••••••••••"
+        secureTextEntry
+      />
+
+      {/* Aceitação dos Termos */}
+      <TouchableOpacity
+        style={styles.termsRow}
+        onPress={() => setAceitouTermos((prev) => !prev)}
+        activeOpacity={0.8}
+      >
+        <View style={[styles.checkbox, aceitouTermos && styles.checkboxChecked]}>
+          {aceitouTermos && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+        </View>
+        <Text style={styles.termsText}>
+          Aceito os Termos de Utilização e a Política de Privacidade.
+        </Text>
       </TouchableOpacity>
+
+      {erro ? <Text style={styles.errorText}>{erro}</Text> : null}
+
+      <PrimaryButton title="Continuar" onPress={handleContinuar} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: '#f8fafc', paddingBottom: 40 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, marginTop: 10 },
-  backButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#e2e8f0', justifyContent: 'center', alignItems: 'center' },
-  brandRow: { flexDirection: 'row', alignItems: 'center' },
-  logoIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginRight: 6 },
-  brandTitle: { fontSize: 16, fontWeight: '700', color: '#064e3b' },
-  title: { fontSize: 24, fontWeight: '800', color: '#1e293b', marginBottom: 6 },
-  subtitle: { fontSize: 13, color: '#64748b', marginBottom: 20 },
-  inputGroup: { marginBottom: 14 },
-  inputLabel: { fontSize: 10, fontWeight: '700', color: '#64748b', marginBottom: 4, letterSpacing: 0.5 },
-  inputBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, paddingHorizontal: 12, height: 46 },
-  inputIcon: { marginRight: 8 },
-  inputText: { flex: 1, fontSize: 13, color: '#1e293b' },
-  termsRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
-  checkboxActive: { width: 18, height: 18, borderRadius: 4, backgroundColor: '#059669', justifyContent: 'center', alignItems: 'center', marginRight: 8 },
-  termsText: { fontSize: 12, color: '#64748b', flex: 1 },
-  primaryButton: { backgroundColor: '#064e3b', height: 50, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-  primaryButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  container: {
+    padding: 20,
+    paddingTop: 16,
+    paddingBottom: 32,
+    backgroundColor: '#F4F6F3',
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
+  },
+  title: {
+    fontSize: 25,
+    fontWeight: '800',
+    color: '#1E2923',
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#6B7871',
+    marginTop: 6,
+    marginBottom: 16,
+    lineHeight: 19,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 18,
+  },
+  progressStep: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#DCE2DE',
+  },
+  progressStepActive: {
+    backgroundColor: '#244735',
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1E2923',
+    marginBottom: 10,
+  },
+  rolesRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  roleCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
+    gap: 5,
+  },
+  roleCardActive: {
+    backgroundColor: '#DCE7DF',
+    borderColor: '#244735',
+    borderWidth: 1.5,
+  },
+  roleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7871',
+  },
+  roleTextActive: {
+    fontWeight: '800',
+    color: '#244735',
+  },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 4,
+    marginBottom: 18,
+    gap: 10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#8B9890',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 1,
+  },
+  checkboxChecked: {
+    backgroundColor: '#244735',
+    borderColor: '#244735',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#5C6962',
+    lineHeight: 17,
+  },
+  errorText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#C2410C',
+    marginBottom: 12,
+  },
 });
