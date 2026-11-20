@@ -5,22 +5,12 @@ import { SafeAreaView, StyleSheet, StatusBar, View, Text } from 'react-native';
 import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
 import HomeScreen from './components/HomeScreen';
+import CamposScreen from './components/CamposScreen';
 import BottomNav from './components/BottomNav';
 
-// --- RESTANTES ECRÃS COMENTADOS PARA FASE SEGUINTE ---
-// import CamposScreen from './components/CamposScreen';
-// import CriarCamposScreen from './components/CriarCamposScreen';
-// import EditarCamposScreen from './components/EditarCamposScreen';
-// import CriarParcelaScreen from './components/CriarParcelaScreen';
-// import EditarParcelaScreen from './components/EditarParcelaScreen';
-// import PlantacoesScreen from './components/PlantacoesScreen';
-// import TarefasScreen from './components/TarefasScreen';
-// import PerfilScreen from './components/PerfilScreen';
-
 export default function App() {
-  // Começa já em 'app' para testar o Dashboard + BottomNav; muda para 'login' para testar autenticação
   const [screenMode, setScreenMode] = useState('app');
-  const [activeTab, setActiveTab] = useState('inicio');
+  const [activeTab, setActiveTab] = useState('campos');
   const [currentUser, setCurrentUser] = useState({
     nomeCompleto: 'Maria Costa',
     empresa: 'Quinta do Vale',
@@ -63,14 +53,24 @@ export default function App() {
       ) : (
         <View style={styles.appShell}>
           <View style={styles.contentArea}>
-            {activeTab === 'inicio' ? (
+            {activeTab === 'inicio' && (
               <HomeScreen
                 userName={primeiroNome}
                 empresaNome={currentUser?.empresa || 'Quinta do Vale'}
                 areaTotal="128,4 ha"
                 onNavigateTab={setActiveTab}
               />
-            ) : (
+            )}
+
+            {activeTab === 'campos' && (
+              <CamposScreen
+                onSelectCampo={(campo) => console.log('Campo selecionado:', campo.nome)}
+                onOpenCriarCampo={() => console.log('Abrir Criar Campo')}
+                onEditCampo={(campo) => console.log('Editar Campo:', campo.nome)}
+              />
+            )}
+
+            {activeTab !== 'inicio' && activeTab !== 'campos' && (
               <View style={styles.placeholderBox}>
                 <Text style={styles.placeholderTitle}>
                   Secção "{activeTab}" em revisão
