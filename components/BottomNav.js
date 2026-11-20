@@ -1,35 +1,36 @@
 // components/BottomNav.js
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function BottomNav({ activeTab, onSelectTab }) {
-  const tabs = [
-    { key: 'inicio', label: 'Início', icon: 'grid-outline' },
-    { key: 'campos', label: 'Campos', icon: 'map-outline' },
-    { key: 'plantacoes', label: 'Plantações', icon: 'leaf-outline' },
-    { key: 'tarefas', label: 'Tarefas', icon: 'list-outline' },
-    { key: 'perfil', label: 'Perfil', icon: 'person-outline' },
-  ];
+const TABS = [
+  { key: 'inicio', label: 'Início', iconActive: 'grid', iconOutline: 'grid-outline' },
+  { key: 'campos', label: 'Campos', iconActive: 'map', iconOutline: 'map-outline' },
+  { key: 'plantacoes', label: 'Plantações', iconActive: 'leaf', iconOutline: 'leaf-outline' },
+  { key: 'tarefas', label: 'Tarefas', iconActive: 'checkbox', iconOutline: 'checkbox-outline' },
+  { key: 'perfil', label: 'Perfil', iconActive: 'person', iconOutline: 'person-outline' },
+];
 
+export default function BottomNav({ activeTab = 'inicio', onSelectTab }) {
   return (
-    <View style={styles.navContainer}>
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.key;
+    <View style={styles.bar}>
+      {TABS.map((tab) => {
+        const ativa = activeTab === tab.key;
         return (
           <TouchableOpacity
             key={tab.key}
             style={styles.tabItem}
-            onPress={() => onSelectTab(tab.key)}
+            onPress={() => onSelectTab && onSelectTab(tab.key)}
+            activeOpacity={0.8}
           >
-            <View style={[styles.iconWrapper, isActive && styles.iconWrapperActive]}>
+            <View style={[styles.iconPill, ativa && styles.iconPillActive]}>
               <Ionicons
-                name={tab.icon}
+                name={ativa ? tab.iconActive : tab.iconOutline}
                 size={20}
-                color={isActive ? '#1B3B2B' : '#7A8680'}
+                color={ativa ? '#1B3B2B' : '#7C8A82'}
               />
             </View>
-            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+            <Text style={[styles.label, ativa && styles.labelActive]}>
               {tab.label}
             </Text>
           </TouchableOpacity>
@@ -40,37 +41,38 @@ export default function BottomNav({ activeTab, onSelectTab }) {
 }
 
 const styles = StyleSheet.create({
-  navContainer: {
+  bar: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E9E6',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    justifyContent: 'space-around',
+    paddingTop: 8,
+    paddingBottom: 10,
+    paddingHorizontal: 6,
   },
   tabItem: {
-    alignItems: 'center',
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  iconPill: {
+    width: 44,
+    height: 30,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
   },
-  iconWrapperActive: {
+  iconPillActive: {
     backgroundColor: '#DCE7DF',
   },
-  tabLabel: {
+  label: {
     fontSize: 11,
-    color: '#7A8680',
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#7C8A82',
   },
-  tabLabelActive: {
+  labelActive: {
+    fontWeight: '800',
     color: '#1B3B2B',
-    fontWeight: '700',
   },
 });

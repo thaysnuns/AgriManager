@@ -1,13 +1,13 @@
 // App.js
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView, StyleSheet, StatusBar, View, Text } from 'react-native';
 
 import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
+import HomeScreen from './components/HomeScreen';
+import BottomNav from './components/BottomNav';
 
-// --- RESTANTES ECRÃS COMENTADOS PARA TESTAR APENAS LOGIN E REGISTO ---
-// import HomeScreen from './components/HomeScreen';
-// import BottomNav from './components/BottomNav';
+// --- RESTANTES ECRÃS COMENTADOS PARA FASE SEGUINTE ---
 // import CamposScreen from './components/CamposScreen';
 // import CriarCamposScreen from './components/CriarCamposScreen';
 // import EditarCamposScreen from './components/EditarCamposScreen';
@@ -18,55 +18,73 @@ import RegisterScreen from './components/RegisterScreen';
 // import PerfilScreen from './components/PerfilScreen';
 
 export default function App() {
-  // 'login' | 'register' | 'app' (quando o resto for reativado)
-  const [authScreen, setAuthScreen] = useState('login');
-  const [currentUser, setCurrentUser] = useState(null);
-
-  // --- ESTADOS COMENTADOS DO RESTO DA APLICAÇÃO ---
-  // const [activeTab, setActiveTab] = useState('inicio');
-  // const [subScreen, setSubScreen] = useState(null);
+  // Começa já em 'app' para testar o Dashboard + BottomNav; muda para 'login' para testar autenticação
+  const [screenMode, setScreenMode] = useState('app');
+  const [activeTab, setActiveTab] = useState('inicio');
+  const [currentUser, setCurrentUser] = useState({
+    nomeCompleto: 'Maria Costa',
+    empresa: 'Quinta do Vale',
+    role: 'agricultor',
+  });
 
   const handleLoginSuccess = (userData) => {
-    setCurrentUser({
+    setCurrentUser((prev) => ({
+      ...prev,
       ...userData,
-      role: 'agricultor',
-    });
-    console.log('Login efetuado com sucesso:', userData);
-    // Quando reativares o resto da app, podes fazer:
-    // setAuthScreen('app');
+      nomeCompleto: prev?.nomeCompleto || 'Maria Costa',
+      empresa: prev?.empresa || 'Quinta do Vale',
+    }));
+    setActiveTab('inicio');
+    setScreenMode('app');
   };
 
   const handleRegisterSuccess = (newUserData) => {
     setCurrentUser(newUserData);
-    console.log('Conta criada com sucesso:', newUserData);
-    // Volta ao login ou entra na app quando reativares o resto:
-    setAuthScreen('login');
+    setActiveTab('inicio');
+    setScreenMode('app');
   };
+
+  const primeiroNome = (currentUser?.nomeCompleto || 'Maria Costa').split(' ')[0];
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F4F6F3" />
 
-      {authScreen === 'register' ? (
+      {screenMode === 'register' ? (
         <RegisterScreen
-          onBackToLogin={() => setAuthScreen('login')}
+          onBackToLogin={() => setScreenMode('login')}
           onRegisterSuccess={handleRegisterSuccess}
         />
-      ) : (
+      ) : screenMode === 'login' ? (
         <LoginScreen
-          onNavigateToRegister={() => setAuthScreen('register')}
+          onNavigateToRegister={() => setScreenMode('register')}
           onLoginSuccess={handleLoginSuccess}
         />
-      )}
+      ) : (
+        <View style={styles.appShell}>
+          <View style={styles.contentArea}>
+            {activeTab === 'inicio' ? (
+              <HomeScreen
+                userName={primeiroNome}
+                empresaNome={currentUser?.empresa || 'Quinta do Vale'}
+                areaTotal="128,4 ha"
+                onNavigateTab={setActiveTab}
+              />
+            ) : (
+              <View style={styles.placeholderBox}>
+                <Text style={styles.placeholderTitle}>
+                  Secção "{activeTab}" em revisão
+                </Text>
+                <Text style={styles.placeholderSub}>
+                  Diz-me quando quiseres avançar para este ecrã.
+                </Text>
+              </View>
+            )}
+          </View>
 
-      {/* --- BLOCO PRINCIPAL DA APP COMENTADO PARA ESTE TESTE ---
-      {authScreen === 'app' && (
-        <>
-          ...
           <BottomNav activeTab={activeTab} onSelectTab={setActiveTab} />
-        </>
+        </View>
       )}
-      --- */}
     </SafeAreaView>
   );
 }
@@ -75,5 +93,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F4F6F3',
+  },
+  appShell: {
+    flex: 1,
+    backgroundColor: '#F4F6F3',
+  },
+  contentArea: {
+    flex: 1,
+  },
+  placeholderBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  placeholderTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1E2923',
+    marginBottom: 6,
+  },
+  placeholderSub: {
+    fontSize: 13,
+    color: '#6B7871',
+    textAlign: 'center',
   },
 });
