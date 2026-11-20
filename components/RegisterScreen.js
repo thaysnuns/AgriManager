@@ -7,25 +7,20 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import BrandLogo from './ui/BrandLogo';
 import AuthInput from './ui/AuthInput';
 import PrimaryButton from './ui/PrimaryButton';
 
-const ROLES = [
-  { key: 'agricultor', label: 'Agricultor', icon: 'tractor-variant' },
-  { key: 'operador', label: 'Operador', icon: 'hard-hat' },
-  { key: 'administrador', label: 'Administrador', icon: 'shield-check-outline' },
-];
-
 export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
-  const [role, setRole] = useState('agricultor');
+  const role = 'agricultor';
+
   const [nomeCompleto, setNomeCompleto] = useState('Maria Costa');
   const [empresa, setEmpresa] = useState('Quinta do Vale');
   const [nifEmpresa, setNifEmpresa] = useState('509123456');
   const [moradaEmpresa, setMoradaEmpresa] = useState('Rua do Vale, 12');
   const [emailProfissional, setEmailProfissional] = useState('maria.costa@quintadovale.pt');
-  const [password, setPassword] = useState('•••••••••••');
+  const [password, setPassword] = useState('123456');
   const [aceitouTermos, setAceitouTermos] = useState(true);
   const [erro, setErro] = useState('');
 
@@ -35,7 +30,7 @@ export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
       return;
     }
 
-    if (role === 'agricultor' && (!empresa.trim() || !nifEmpresa.trim() || !moradaEmpresa.trim())) {
+    if (!empresa.trim() || !nifEmpresa.trim() || !moradaEmpresa.trim()) {
       setErro('Os dados fiscais da empresa (nome, NIF e morada) são obrigatórios.');
       return;
     }
@@ -60,6 +55,7 @@ export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
 
   return (
     <ScrollView
+      style={styles.scrollView}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
@@ -75,42 +71,23 @@ export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
       {/* Título e Subtítulo */}
       <Text style={styles.title}>Criar a sua conta</Text>
       <Text style={styles.subtitle}>
-        Configure a exploração em poucos passos. Pode convidar a equipa mais tarde.
+        Registo de Agricultor e dados fiscais da exploração. Pode convidar operadores mais tarde.
       </Text>
 
-      {/* Barra de Progresso (3 passos) */}
+      {/* Barra de Progresso */}
       <View style={styles.progressRow}>
         <View style={[styles.progressStep, styles.progressStepActive]} />
         <View style={styles.progressStep} />
         <View style={styles.progressStep} />
       </View>
 
-      {/* Seletor de Função */}
-      <Text style={styles.sectionLabel}>Qual é a sua função?</Text>
-      <View style={styles.rolesRow}>
-        {ROLES.map((item) => {
-          const ativa = role === item.key;
-          return (
-            <TouchableOpacity
-              key={item.key}
-              style={[styles.roleCard, ativa && styles.roleCardActive]}
-              onPress={() => setRole(item.key)}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons
-                name={item.icon}
-                size={21}
-                color={ativa ? '#244735' : '#6B7871'}
-              />
-              <Text style={[styles.roleText, ativa && styles.roleTextActive]}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+      {/* Identificação de Perfil Fixo: Agricultor */}
+      <View style={styles.roleBanner}>
+        <Ionicons name="leaf-outline" size={18} color="#244735" />
+        <Text style={styles.roleBannerText}>Conta de Agricultor (Exploração Agrícola)</Text>
       </View>
 
-      {/* Campos Pessoais e Fiscais da Empresa (RAC0a) */}
+      {/* Campos Pessoais e Fiscais da Empresa (RFA0 / RAC0a) */}
       <AuthInput
         label="NOME COMPLETO"
         iconName="person-outline"
@@ -119,36 +96,31 @@ export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
         placeholder="Maria Costa"
       />
 
-      {role !== 'administrador' && (
-        <>
-          <AuthInput
-            label="EMPRESA / EXPLORAÇÃO"
-            iconName="business-outline"
-            value={empresa}
-            onChangeText={setEmpresa}
-            placeholder="Quinta do Vale"
-          />
+      <AuthInput
+        label="EMPRESA / EXPLORAÇÃO"
+        iconName="business-outline"
+        value={empresa}
+        onChangeText={setEmpresa}
+        placeholder="Quinta do Vale"
+      />
 
-          <AuthInput
-            label="NIF- empresa"
-            iconName="card-account-details-outline"
-            iconLibrary="mci"
-            value={nifEmpresa}
-            onChangeText={setNifEmpresa}
-            placeholder="509123456"
-            keyboardType="numeric"
-            secureTextEntry
-          />
+      <AuthInput
+        label="NIF- empresa"
+        iconName="card-outline"
+        value={nifEmpresa}
+        onChangeText={setNifEmpresa}
+        placeholder="509123456"
+        keyboardType="numeric"
+        secureTextEntry
+      />
 
-          <AuthInput
-            label="MORADA DA EMPRESA"
-            iconName="business-outline"
-            value={moradaEmpresa}
-            onChangeText={setMoradaEmpresa}
-            placeholder="Rua do Vale, 12"
-          />
-        </>
-      )}
+      <AuthInput
+        label="MORADA DA EMPRESA"
+        iconName="location-outline"
+        value={moradaEmpresa}
+        onChangeText={setMoradaEmpresa}
+        placeholder="Rua do Vale, 12"
+      />
 
       <AuthInput
         label="EMAIL PROFISSIONAL"
@@ -176,7 +148,9 @@ export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
         activeOpacity={0.8}
       >
         <View style={[styles.checkbox, aceitouTermos && styles.checkboxChecked]}>
-          {aceitouTermos && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+          {aceitouTermos ? (
+            <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+          ) : null}
         </View>
         <Text style={styles.termsText}>
           Aceito os Termos de Utilização e a Política de Privacidade.
@@ -191,7 +165,12 @@ export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#F4F6F3',
+  },
   container: {
+    flexGrow: 1,
     padding: 20,
     paddingTop: 16,
     paddingBottom: 32,
@@ -228,7 +207,7 @@ const styles = StyleSheet.create({
   progressRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 18,
+    marginBottom: 16,
   },
   progressStep: {
     flex: 1,
@@ -239,40 +218,21 @@ const styles = StyleSheet.create({
   progressStepActive: {
     backgroundColor: '#244735',
   },
-  sectionLabel: {
+  roleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#DCE7DF',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#C5D8CB',
+  },
+  roleBannerText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1E2923',
-    marginBottom: 10,
-  },
-  rolesRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  roleCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-    gap: 5,
-  },
-  roleCardActive: {
-    backgroundColor: '#DCE7DF',
-    borderColor: '#244735',
-    borderWidth: 1.5,
-  },
-  roleText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6B7871',
-  },
-  roleTextActive: {
-    fontWeight: '800',
     color: '#244735',
   },
   termsRow: {

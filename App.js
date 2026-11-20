@@ -1,182 +1,79 @@
 // App.js
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, StyleSheet, StatusBar } from 'react-native';
+
 import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
-import HomeScreen from './components/HomeScreen';
-import CamposScreen from './components/CamposScreen';
-import CriarCamposScreen from './components/CriarCamposScreen';
-import EditarCamposScreen from './components/EditarCamposScreen';
-import CriarParcelaScreen from './components/CriarParcelaScreen';
-import EditarParcelaScreen from './components/EditarParcelaScreen';
-import PlantacoesScreen from './components/PlantacoesScreen';
-import TarefasScreen from './components/TarefasScreen';
-import PerfilScreen from './components/PerfilScreen';
-import OperadoresScreen from './components/OperadoresScreen';
-import RegistarOperadorScreen from './components/RegistarOperadorScreen';
-import BottomNav from './components/BottomNav';
+
+// --- RESTANTES ECRÃS COMENTADOS PARA TESTAR APENAS LOGIN E REGISTO ---
+// import HomeScreen from './components/HomeScreen';
+// import BottomNav from './components/BottomNav';
+// import CamposScreen from './components/CamposScreen';
+// import CriarCamposScreen from './components/CriarCamposScreen';
+// import EditarCamposScreen from './components/EditarCamposScreen';
+// import CriarParcelaScreen from './components/CriarParcelaScreen';
+// import EditarParcelaScreen from './components/EditarParcelaScreen';
+// import PlantacoesScreen from './components/PlantacoesScreen';
+// import TarefasScreen from './components/TarefasScreen';
+// import PerfilScreen from './components/PerfilScreen';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState('login');
-  const [activeTab, setActiveTab] = useState('inicio');
-  const [subScreen, setSubScreen] = useState(null);
-  const [ultimoOperador, setUltimoOperador] = useState(null);
-  const [novoCampo, setNovoCampo] = useState(null);
-  const [campoEmEdicao, setCampoEmEdicao] = useState(null);
-  const [campoEditado, setCampoEditado] = useState(null);
-  const [campoParcelaContexto, setCampoParcelaContexto] = useState(null);
-  const [novaParcela, setNovaParcela] = useState(null);
-  const [parcelaEmEdicao, setParcelaEmEdicao] = useState(null);
-  const [parcelaEditada, setParcelaEditada] = useState(null);
+  // 'login' | 'register' | 'app' (quando o resto for reativado)
+  const [authScreen, setAuthScreen] = useState('login');
+  const [currentUser, setCurrentUser] = useState(null);
 
-  if (currentScreen === 'login') {
-    return (
-      <SafeAreaView style={styles.authContainer}>
-        <LoginScreen
-          onNavigateToRegister={() => setCurrentScreen('register')}
-          onLoginSuccess={() => setCurrentScreen('home')}
-        />
-      </SafeAreaView>
-    );
-  }
+  // --- ESTADOS COMENTADOS DO RESTO DA APLICAÇÃO ---
+  // const [activeTab, setActiveTab] = useState('inicio');
+  // const [subScreen, setSubScreen] = useState(null);
 
-  if (currentScreen === 'register') {
-    return (
-      <SafeAreaView style={styles.authContainer}>
-        <RegisterScreen
-          onBackToLogin={() => setCurrentScreen('login')}
-          onRegisterSuccess={() => setCurrentScreen('home')}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  const handleSelectTab = (tab) => {
-    setActiveTab(tab);
-    setSubScreen(null);
+  const handleLoginSuccess = (userData) => {
+    setCurrentUser({
+      ...userData,
+      role: 'agricultor',
+    });
+    console.log('Login efetuado com sucesso:', userData);
+    // Quando reativares o resto da app, podes fazer:
+    // setAuthScreen('app');
   };
 
-  const abrirCriarCampo = () => setSubScreen('criar-campo');
-
-  const abrirEditarCampo = (campo) => {
-    setCampoEmEdicao(campo);
-    setSubScreen('editar-campo');
-  };
-
-  const abrirCriarParcela = (nomeCampo = null) => {
-    setCampoParcelaContexto(nomeCampo);
-    setSubScreen('criar-parcela');
-  };
-
-  const abrirEditarParcela = (parcela) => {
-    setParcelaEmEdicao(parcela);
-    setSubScreen('editar-parcela');
+  const handleRegisterSuccess = (newUserData) => {
+    setCurrentUser(newUserData);
+    console.log('Conta criada com sucesso:', newUserData);
+    // Volta ao login ou entra na app quando reativares o resto:
+    setAuthScreen('login');
   };
 
   return (
-    <SafeAreaView style={styles.appContainer}>
-      <View style={styles.mainContent}>
-        {activeTab === 'inicio' && <HomeScreen />}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F4F6F3" />
 
-        {activeTab === 'campos' && !subScreen && (
-          <CamposScreen
-            onOpenCriarCampo={abrirCriarCampo}
-            onAddCampo={abrirCriarCampo}
-            onPressAdd={abrirCriarCampo}
-            onEditCampo={abrirEditarCampo}
-            onOpenCriarParcela={abrirCriarParcela}
-            onEditParcela={abrirEditarParcela}
-            novoCampo={novoCampo}
-            campoEditado={campoEditado}
-            novaParcela={novaParcela}
-            parcelaEditada={parcelaEditada}
-          />
-        )}
+      {authScreen === 'register' ? (
+        <RegisterScreen
+          onBackToLogin={() => setAuthScreen('login')}
+          onRegisterSuccess={handleRegisterSuccess}
+        />
+      ) : (
+        <LoginScreen
+          onNavigateToRegister={() => setAuthScreen('register')}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      )}
 
-        {activeTab === 'campos' && subScreen === 'criar-campo' && (
-          <CriarCamposScreen
-            onBack={() => setSubScreen(null)}
-            onCampoCriado={(campo) => {
-              setNovoCampo(campo);
-              setSubScreen(null);
-            }}
-          />
-        )}
-
-        {activeTab === 'campos' && subScreen === 'editar-campo' && (
-          <EditarCamposScreen
-            campo={campoEmEdicao}
-            onBack={() => setSubScreen(null)}
-            onGuardarAlteracoes={(atualizado) => {
-              setCampoEditado(atualizado);
-              setSubScreen(null);
-            }}
-          />
-        )}
-
-        {activeTab === 'campos' && subScreen === 'criar-parcela' && (
-          <CriarParcelaScreen
-            campoInicial={campoParcelaContexto}
-            onBack={() => setSubScreen(null)}
-            onParcelaCriada={(parcela) => {
-              setNovaParcela(parcela);
-              setSubScreen(null);
-            }}
-          />
-        )}
-
-        {activeTab === 'campos' && subScreen === 'editar-parcela' && (
-          <EditarParcelaScreen
-            parcela={parcelaEmEdicao}
-            onBack={() => setSubScreen(null)}
-            onGuardarAlteracoes={(atualizada) => {
-              setParcelaEditada(atualizada);
-              setSubScreen(null);
-            }}
-          />
-        )}
-
-        {activeTab === 'plantacoes' && <PlantacoesScreen />}
-        {activeTab === 'tarefas' && <TarefasScreen />}
-
-        {activeTab === 'perfil' && !subScreen && (
-          <PerfilScreen onOpenOperadores={() => setSubScreen('operadores')} />
-        )}
-
-        {activeTab === 'perfil' && subScreen === 'operadores' && (
-          <OperadoresScreen
-            onBack={() => setSubScreen(null)}
-            onAddOperador={() => setSubScreen('registar-operador')}
-            novoOperador={ultimoOperador}
-          />
-        )}
-
-        {activeTab === 'perfil' && subScreen === 'registar-operador' && (
-          <RegistarOperadorScreen
-            onBack={() => setSubScreen('operadores')}
-            onOperadorRegistado={(dados) => {
-              setUltimoOperador(dados);
-              setSubScreen('operadores');
-            }}
-          />
-        )}
-      </View>
-
-      <BottomNav activeTab={activeTab} onSelectTab={handleSelectTab} />
+      {/* --- BLOCO PRINCIPAL DA APP COMENTADO PARA ESTE TESTE ---
+      {authScreen === 'app' && (
+        <>
+          ...
+          <BottomNav activeTab={activeTab} onSelectTab={setActiveTab} />
+        </>
+      )}
+      --- */}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  authContainer: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  appContainer: {
+  container: {
     flex: 1,
     backgroundColor: '#F4F6F3',
-  },
-  mainContent: {
-    flex: 1,
   },
 });
