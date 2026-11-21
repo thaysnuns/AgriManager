@@ -5,10 +5,11 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Image,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import SearchBar from './ui/SearchBar';
+import CamposCard from './ui/CamposCard';
 
 export const CAMPOS_SCREEN_INICIAIS = [
   {
@@ -21,8 +22,6 @@ export const CAMPOS_SCREEN_INICIAIS = [
     detalheEstado: 'NDVI 0,82',
     alerta: false,
     tipoCultura: 'olival',
-    iconBg: '#E1ECE4',
-    iconColor: '#2A6F4E',
     cultura: 'Oliveira Galega',
     zona: 'Setor Norte',
   },
@@ -36,8 +35,6 @@ export const CAMPOS_SCREEN_INICIAIS = [
     detalheEstado: 'Humidade baixa',
     alerta: true,
     tipoCultura: 'vinha',
-    iconBg: '#F7E7D5',
-    iconColor: '#B85D19',
     cultura: 'Touriga Nacional',
     zona: 'Encosta Poente',
   },
@@ -51,55 +48,8 @@ export const CAMPOS_SCREEN_INICIAIS = [
     detalheEstado: 'NDVI 0,75',
     alerta: false,
     tipoCultura: 'cereal',
-    iconBg: '#E1ECE4',
-    iconColor: '#2A6F4E',
     cultura: 'Trigo duro',
     zona: 'Planície Sul',
-  },
-  {
-    id: 'campo-4',
-    nome: 'Olival Nascente',
-    area: 14.5,
-    parcelasCount: 2,
-    estado: 'Ativo',
-    estadoTitulo: 'Saudável',
-    detalheEstado: 'NDVI 0,79',
-    alerta: false,
-    tipoCultura: 'olival',
-    iconBg: '#E1ECE4',
-    iconColor: '#2A6F4E',
-    cultura: 'Cobrançosa',
-    zona: 'Setor Nascente',
-  },
-  {
-    id: 'campo-5',
-    nome: 'Horta do Vale',
-    area: 6.4,
-    parcelasCount: 2,
-    estado: 'Ativo',
-    estadoTitulo: 'Saudável',
-    detalheEstado: 'Humidade 66%',
-    alerta: false,
-    tipoCultura: 'horta',
-    iconBg: '#E1ECE4',
-    iconColor: '#2A6F4E',
-    cultura: 'Tomate indústria',
-    zona: 'Vale Central',
-  },
-  {
-    id: 'campo-6',
-    nome: 'Montado da Ribeira',
-    area: 14.9,
-    parcelasCount: 3,
-    estado: 'Ativo',
-    estadoTitulo: 'Saudável',
-    detalheEstado: 'NDVI 0,74',
-    alerta: false,
-    tipoCultura: 'olival',
-    iconBg: '#E1ECE4',
-    iconColor: '#2A6F4E',
-    cultura: 'Pastagem & árvores',
-    zona: 'Ribeira Sul',
   },
 ];
 
@@ -107,28 +57,28 @@ const IMAGEM_AEREA_CAMPOS = {
   uri: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80',
 };
 
-function formatarArea(area) {
-  if (typeof area === 'number') {
-    return `${area.toFixed(1).replace('.', ',')} ha`;
-  }
-  const num = parseFloat(String(area || '0').replace(',', '.'));
-  return `${(Number.isNaN(num) ? 0 : num).toFixed(1).replace('.', ',')} ha`;
-}
+function getCampoIconConfig(campo) {
+  const nome = (campo?.nome || '').toLowerCase();
+  const tipo = campo?.tipoCultura || '';
 
-function renderIconeCultura(campo) {
-  const tipo = campo?.tipoCultura || 'olival';
-  const cor = campo?.iconColor || '#2A6F4E';
+  if (tipo === 'vinha' || nome.includes('vinha')) {
+    return {
+      boxStyle: { backgroundColor: '#F7E7D5' },
+      element: <MaterialCommunityIcons name="grape" size={20} color="#B85D19" />,
+    };
+  }
 
-  if (tipo === 'vinha') {
-    return <MaterialCommunityIcons name="grape" size={20} color={cor} />;
+  if (tipo === 'cereal' || nome.includes('cereal')) {
+    return {
+      boxStyle: { backgroundColor: '#E1ECE4' },
+      element: <MaterialCommunityIcons name="sprout" size={20} color="#2A6F4E" />,
+    };
   }
-  if (tipo === 'cereal') {
-    return <MaterialCommunityIcons name="sprout" size={20} color={cor} />;
-  }
-  if (tipo === 'horta') {
-    return <Ionicons name="leaf-outline" size={20} color={cor} />;
-  }
-  return <MaterialCommunityIcons name="pine-tree" size={20} color={cor} />;
+
+  return {
+    boxStyle: { backgroundColor: '#E1ECE4' },
+    element: <MaterialCommunityIcons name="pine-tree" size={20} color="#2A6F4E" />,
+  };
 }
 
 export default function CamposScreen({
@@ -158,22 +108,15 @@ export default function CamposScreen({
   );
 
   const areaTotalTexto = useMemo(() => {
-    if (
-      Array.isArray(camposData) &&
-      camposData.length > 0 &&
-      camposData !== CAMPOS_SCREEN_INICIAIS
-    ) {
-      const soma = listaBase.reduce((acc, item) => {
-        const val =
-          typeof item.area === 'number'
-            ? item.area
-            : parseFloat(String(item.area || '0').replace(',', '.'));
-        return acc + (Number.isNaN(val) ? 0 : val);
-      }, 0);
-      return soma.toFixed(1).replace('.', ',');
-    }
-    return '128,4';
-  }, [camposData, listaBase]);
+    const soma = listaBase.reduce((acc, item) => {
+      const val =
+        typeof item.area === 'number'
+          ? item.area
+          : parseFloat(String(item.area || '0').replace(',', '.'));
+      return acc + (Number.isNaN(val) ? 0 : val);
+    }, 0);
+    return soma.toFixed(1).replace('.', ',');
+  }, [listaBase]);
 
   const camposFiltrados = useMemo(() => {
     const termo = pesquisa.trim().toLowerCase();
@@ -187,6 +130,12 @@ export default function CamposScreen({
       return alvo.includes(termo);
     });
   }, [listaBase, pesquisa, filtroEstado]);
+
+  const handleCiclarFiltro = () => {
+    setFiltroEstado((prev) =>
+      prev === 'Todos' ? 'Ativos' : prev === 'Ativos' ? 'Atenção' : 'Todos'
+    );
+  };
 
   return (
     <ScrollView
@@ -214,38 +163,21 @@ export default function CamposScreen({
       </View>
 
       <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={18} color="#8B9890" />
-          <TextInput
+        <View style={styles.searchBarFlex}>
+          <SearchBar
             value={pesquisa}
             onChangeText={setPesquisa}
+            onChange={setPesquisa}
+            onSearch={setPesquisa}
             placeholder="Pesquisar campo..."
-            placeholderTextColor="#8B9890"
-            style={styles.searchInput}
           />
-          {pesquisa ? (
-            <TouchableOpacity
-              onPress={() => setPesquisa('')}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="close-circle" size={16} color="#8B9890" />
-            </TouchableOpacity>
-          ) : null}
         </View>
 
         <TouchableOpacity
           style={styles.filterBtn}
           activeOpacity={0.85}
           delayPressIn={0}
-          onPress={() => {
-            setFiltroEstado((prev) =>
-              prev === 'Todos'
-                ? 'Ativos'
-                : prev === 'Ativos'
-                  ? 'Atenção'
-                  : 'Todos'
-            );
-          }}
+          onPress={handleCiclarFiltro}
         >
           <Ionicons name="options-outline" size={18} color="#24593F" />
         </TouchableOpacity>
@@ -339,79 +271,24 @@ export default function CamposScreen({
 
       <View style={styles.listSection}>
         {camposFiltrados.map((campo) => {
-          const isAlerta = campo.estado === 'Atencao' || Boolean(campo.alerta);
-          const tituloEstado =
-            campo.estadoTitulo || (isAlerta ? 'Atenção' : 'Saudável');
-          const subEstado =
-            campo.detalheEstado || (isAlerta ? 'Humidade baixa' : 'NDVI 0,78');
-          const parcelas = campo.parcelasCount ?? 0;
+          const iconConfig = getCampoIconConfig(campo);
 
           return (
-            <View key={campo.id || campo.nome} style={styles.campoCard}>
-              <TouchableOpacity
-                style={styles.campoLeftPressable}
-                activeOpacity={0.85}
-                delayPressIn={0}
-                onPress={() => onSelectCampo && onSelectCampo(campo)}
-              >
-                <View
-                  style={[
-                    styles.iconBox,
-                    campo.iconBg ? { backgroundColor: campo.iconBg } : null,
-                  ]}
-                >
-                  {renderIconeCultura(campo)}
-                </View>
-
-                <View style={styles.campoInfoCol}>
-                  <Text numberOfLines={1} style={styles.campoTitle}>
-                    {campo.nome}
-                  </Text>
-                  <Text numberOfLines={1} style={styles.campoSubtitle}>
-                    {formatarArea(campo.area)} · {parcelas} parcelas
-                  </Text>
-                </View>
-
-                <View style={styles.statusCol}>
-                  <Text style={styles.statusTitle}>{tituloEstado}</Text>
-                  <Text
-                    style={[
-                      styles.statusSub,
-                      isAlerta ? styles.statusSubAlerta : styles.statusSubOk,
-                    ]}
-                  >
-                    {subEstado}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <View style={styles.actionsCol}>
-                <TouchableOpacity
-                  style={styles.editBtn}
-                  activeOpacity={0.8}
-                  delayPressIn={0}
-                  onPress={() => onEditCampo && onEditCampo(campo)}
-                >
-                  <Ionicons name="pencil" size={14} color="#24593F" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.deleteBtn}
-                  activeOpacity={0.8}
-                  delayPressIn={0}
-                  onPress={() => onDeleteCampo && onDeleteCampo(campo)}
-                >
-                  <Ionicons name="trash-outline" size={14} color="#B85D19" />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <CamposCard
+              key={campo.id || campo.nome}
+              campo={campo}
+              icon={iconConfig.element}
+              iconBoxStyle={iconConfig.boxStyle}
+              onPress={(item) => onSelectCampo && onSelectCampo(item)}
+              onEdit={(item) => onEditCampo && onEditCampo(item)}
+              onDelete={(item) => onDeleteCampo && onDeleteCampo(item)}
+            />
           );
         })}
       </View>
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
@@ -454,23 +331,8 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 14,
   },
-  searchBox: {
+  searchBarFlex: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 46,
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#1E2923',
-    paddingVertical: 0,
   },
   filterBtn: {
     width: 44,
@@ -580,85 +442,5 @@ const styles = StyleSheet.create({
   },
   listSection: {
     gap: 10,
-  },
-  campoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-  },
-  campoLeftPressable: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#E1ECE4',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  campoInfoCol: {
-    flex: 1,
-    marginRight: 8,
-  },
-  campoTitle: {
-    fontSize: 15.5,
-    fontWeight: '800',
-    color: '#1E2923',
-  },
-  campoSubtitle: {
-    fontSize: 12,
-    color: '#7A8680',
-    marginTop: 2,
-  },
-  statusCol: {
-    alignItems: 'flex-end',
-  },
-  statusTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#1E2923',
-  },
-  statusSub: {
-    fontSize: 11.5,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  statusSubOk: {
-    color: '#2D7A4F',
-  },
-  statusSubAlerta: {
-    color: '#B85D19',
-  },
-  actionsCol: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 6,
-  },
-  editBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#E1ECE4',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#F7E7D5',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

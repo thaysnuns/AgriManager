@@ -1,10 +1,10 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 function formatarArea(area) {
   if (typeof area === 'number') {
-    return `${String(area).replace('.', ',')} ha`;
+    return `${area.toFixed(1).replace('.', ',')} ha`;
   }
   if (typeof area === 'string' && area.trim().length > 0) {
     const limpa = area.trim().replace('.', ',');
@@ -13,127 +13,83 @@ function formatarArea(area) {
   return '0,0 ha';
 }
 
-function renderCampoIcon(campo) {
-  const tipo = campo?.tipoCultura || campo?.iconTipo || 'olival';
-  const cor = campo?.iconColor || '#2A6F4E';
-
-  switch (tipo) {
-    case 'vinha':
-      return <MaterialCommunityIcons name="grape" size={21} color={cor} />;
-    case 'cereal':
-      return <MaterialCommunityIcons name="sprout" size={21} color={cor} />;
-    case 'horta':
-      return <Ionicons name="leaf-outline" size={21} color={cor} />;
-    case 'olival':
-    default:
-      return <MaterialCommunityIcons name="pine-tree" size={21} color={cor} />;
-  }
-}
-
 export default function CamposCard({
   campo,
+  icon,
+  iconBoxStyle,
   onPress,
-  onQr,
   onEdit,
   onDelete,
   style,
 }) {
   if (!campo) return null;
 
-  const tituloCard = campo.codigo
-    ? `${campo.codigo} - ${campo.nome}`
-    : campo.nome;
-
-  const areaTexto = formatarArea(campo.area);
-  const subtituloTexto = campo.cultura
-    ? `${areaTexto} · ${campo.cultura}`
-    : areaTexto;
-
-  const metricaValor =
-    campo.metricaValor !== undefined && campo.metricaValor !== null
-      ? String(campo.metricaValor)
-      : campo.humidade !== undefined && campo.humidade !== null
-        ? `${campo.humidade}%`
-        : '64%';
-
-  const metricaLabel = campo.humidadeLabel || 'Humidade';
-  const isAlerta = Boolean(campo.metricaAlerta);
+  const isAlerta = campo.estado === 'Atencao' || Boolean(campo.alerta);
+  const tituloEstado =
+    campo.estadoTitulo || (isAlerta ? 'Atenção' : 'Saudável');
+  const subEstado =
+    campo.detalheEstado || (isAlerta ? 'Humidade baixa' : 'NDVI 0,78');
+  const parcelas = campo.parcelasCount ?? 0;
 
   return (
-    <View style={[styles.card, style]}>
+    <View style={[styles.campoCard, style]}>
       <TouchableOpacity
-        style={styles.leftMainTouchable}
+        style={styles.campoLeftPressable}
         activeOpacity={0.85}
         delayPressIn={0}
         onPress={() => onPress && onPress(campo)}
       >
-        <View
-          style={[
-            styles.iconBox,
-            campo.iconBg ? { backgroundColor: campo.iconBg } : null,
-          ]}
-        >
-          {renderCampoIcon(campo)}
+        {icon ? (
+          <View style={[styles.iconBox, iconBoxStyle]}>{icon}</View>
+        ) : null}
+
+        <View style={styles.campoInfoCol}>
+          <Text numberOfLines={1} style={styles.campoTitle}>
+            {campo.nome}
+          </Text>
+          <Text numberOfLines={1} style={styles.campoSubtitle}>
+            {formatarArea(campo.area)} · {parcelas} parcelas
+          </Text>
         </View>
 
-        <View style={styles.infoCol}>
-          <Text numberOfLines={1} style={styles.title}>
-            {tituloCard}
-          </Text>
-          <Text numberOfLines={1} style={styles.subtitle}>
-            {subtituloTexto}
+        <View style={styles.statusCol}>
+          <Text style={styles.statusTitle}>{tituloEstado}</Text>
+          <Text
+            style={[
+              styles.statusSub,
+              isAlerta ? styles.statusSubAlerta : styles.statusSubOk,
+            ]}
+          >
+            {subEstado}
           </Text>
         </View>
       </TouchableOpacity>
 
-      <View style={styles.rightCol}>
-        <View style={styles.metricBlock}>
-          <Text style={styles.metricValue}>{metricaValor}</Text>
-          <Text
-            style={[
-              styles.metricLabel,
-              isAlerta && styles.metricLabelAlerta,
-            ]}
-          >
-            {metricaLabel}
-          </Text>
-        </View>
+      <View style={styles.actionsCol}>
+        <TouchableOpacity
+          style={styles.editBtn}
+          activeOpacity={0.8}
+          delayPressIn={0}
+          onPress={() => onEdit && onEdit(campo)}
+        >
+          <Ionicons name="pencil" size={14} color="#24593F" />
+        </TouchableOpacity>
 
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={styles.actionBtnGreen}
-            activeOpacity={0.8}
-            delayPressIn={0}
-            onPress={() => onQr && onQr(campo)}
-          >
-            <Ionicons name="qr-code-outline" size={13} color="#24593F" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionBtnGreen}
-            activeOpacity={0.8}
-            delayPressIn={0}
-            onPress={() => onEdit && onEdit(campo)}
-          >
-            <Ionicons name="pencil" size={12} color="#24593F" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionBtnAmber}
-            activeOpacity={0.8}
-            delayPressIn={0}
-            onPress={() => onDelete && onDelete(campo)}
-          >
-            <Ionicons name="trash-outline" size={13} color="#B85D19" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.deleteBtn}
+          activeOpacity={0.8}
+          delayPressIn={0}
+          onPress={() => onDelete && onDelete(campo)}
+        >
+          <Ionicons name="trash-outline" size={14} color="#B85D19" />
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  campoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -141,15 +97,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#E5E9E6',
   },
-  leftMainTouchable: {
+  campoLeftPressable: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 10,
   },
   iconBox: {
     width: 44,
@@ -160,59 +115,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  infoCol: {
+  campoInfoCol: {
     flex: 1,
+    marginRight: 8,
   },
-  title: {
-    fontSize: 15,
-    fontWeight: '700',
+  campoTitle: {
+    fontSize: 15.5,
+    fontWeight: '800',
     color: '#1E2923',
   },
-  subtitle: {
+  campoSubtitle: {
     fontSize: 12,
     color: '#7A8680',
     marginTop: 2,
   },
-  rightCol: {
+  statusCol: {
     alignItems: 'flex-end',
-    justifyContent: 'space-between',
   },
-  metricBlock: {
-    alignItems: 'flex-end',
-    marginBottom: 6,
-  },
-  metricValue: {
-    fontSize: 15,
+  statusTitle: {
+    fontSize: 14,
     fontWeight: '800',
     color: '#1E2923',
-    lineHeight: 18,
   },
-  metricLabel: {
-    fontSize: 11,
+  statusSub: {
+    fontSize: 11.5,
     fontWeight: '700',
-    color: '#2D7A4F',
-    marginTop: 1,
+    marginTop: 2,
   },
-  metricLabelAlerta: {
+  statusSubOk: {
+    color: '#2D7A4F',
+  },
+  statusSubAlerta: {
     color: '#B85D19',
   },
-  actionsRow: {
-    flexDirection: 'row',
+  actionsCol: {
+    flexDirection: 'column',
     alignItems: 'center',
     gap: 6,
   },
-  actionBtnGreen: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
+  editBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     backgroundColor: '#E1ECE4',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  actionBtnAmber: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
+  deleteBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     backgroundColor: '#F7E7D5',
     justifyContent: 'center',
     alignItems: 'center',
