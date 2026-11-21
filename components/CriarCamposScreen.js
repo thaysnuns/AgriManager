@@ -6,157 +6,178 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import AuthInput from './ui/AuthInput';
+import PrimaryButton from './ui/PrimaryButton';
 
-const CULTURAS = [
-  'Olival',
+const OPCOES_CULTURA = [
+  'Oliveira Galega',
+  'Olival Tradicional',
   'Vinha',
   'Cereal',
-  'Pomar',
   'Horta',
 ];
 
-export default function CriarCamposScreen({ onBack, onCampoCriado }) {
-  const [nomeCampo, setNomeCampo] = useState('');
-  const [areaTotal, setAreaTotal] = useState('');
-  const [culturaPrincipal, setCulturaPrincipal] = useState('');
-  const [dropdownAberto, setDropdownAberto] = useState(false);
+export default function CriarCamposScreen({
+  onBack,
+  onCriarCampo,
+}) {
+  const [nome, setNome] = useState('');
+  const [area, setArea] = useState('');
+  const [cultura, setCultura] = useState('');
+  const [mostrarCulturas, setMostrarCulturas] = useState(false);
   const [localizacao, setLocalizacao] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [erro, setErro] = useState('');
 
-  const handleCriarCampo = () => {
-    const nomeLimpo = nomeCampo.trim();
-    const areaNormalizada = areaTotal.trim().replace(',', '.');
-    const areaNumero = parseFloat(areaNormalizada);
+  const handleGuardar = () => {
+    const nomeLimpo = nome.trim();
+    const areaLimpa = area.trim();
+    const culturaLimpa = cultura.trim();
+    const locLimpa = localizacao.trim();
+    const obsLimpa = observacoes.trim();
 
-    if (!nomeLimpo) {
-      setErro('O nome do campo é obrigatório.');
+    if (!nomeLimpo || !areaLimpa) {
+      setErro('Preencha o nome do campo (*) e a área total (*).');
       return;
     }
 
-    if (!areaNormalizada || Number.isNaN(areaNumero) || areaNumero <= 0) {
-      setErro('Indique uma área total válida em hectares (ha).');
+    const areaNumero = parseFloat(areaLimpa.replace(',', '.'));
+    if (Number.isNaN(areaNumero) || areaNumero <= 0) {
+      setErro('Insira uma área total válida em hectares (ex.: 12,5).');
       return;
     }
 
     setErro('');
-    if (onCampoCriado) {
-      onCampoCriado({
+
+    if (onCriarCampo) {
+      onCriarCampo({
+        id: `campo-${Date.now()}`,
         nome: nomeLimpo,
         area: areaNumero,
-        areaFormatada: `${areaNumero.toLocaleString('pt-PT', {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        })} ha`,
-        cultura: culturaPrincipal || 'Sem cultura definida',
-        localizacao: localizacao.trim() || 'Évora',
-        observacoes: observacoes.trim(),
+        cultura: culturaLimpa || 'Não definida',
+        localizacao: locLimpa,
+        zona: locLimpa || 'Exploração',
+        observacoes: obsLimpa,
+        parcelasCount: 0,
       });
     }
   };
 
   return (
     <ScrollView
+      style={styles.scrollView}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
       {/* Cabeçalho */}
       <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          activeOpacity={0.8}
+          delayPressIn={0}
+          onPress={() => onBack && onBack()}
+        >
           <Ionicons name="arrow-back" size={20} color="#1E2923" />
         </TouchableOpacity>
-        <View>
+
+        <View style={styles.headerTextCol}>
           <Text style={styles.title}>Criar campo de cultivo</Text>
           <Text style={styles.subtitle}>Campos · Novo registo</Text>
         </View>
       </View>
 
-      {/* Secção: Dados do campo */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Dados do campo</Text>
-        <Text style={styles.requiredHint}>Preencha os dados. * Campos obrigatórios.</Text>
-      </View>
+      <Text style={styles.sectionTitle}>Dados do campo</Text>
+      <Text style={styles.sectionHelper}>
+        Preencha os dados. * Campos obrigatórios.
+      </Text>
 
       {/* Nome do campo * */}
-      <Text style={styles.fieldLabel}>
-        Nome do campo <Text style={styles.asterisk}>*</Text>
-      </Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ex.: Olival Nascente"
-        placeholderTextColor="#8B9890"
-        value={nomeCampo}
+      <Text style={styles.label}>Nome do campo *</Text>
+      <AuthInput
+        iconName="map-outline"
+        iconLibrary="ion"
+        value={nome}
         onChangeText={(t) => {
-          setNomeCampo(t);
+          setNome(t);
           if (erro) setErro('');
         }}
+        placeholder="Ex.: Olival Nascente"
+        autoCapitalize="words"
       />
 
-      {/* Área total * */}
-      <Text style={styles.fieldLabel}>
-        Área total <Text style={styles.asterisk}>*</Text>
-      </Text>
-      <View style={styles.areaInputBox}>
-        <TextInput
-          style={styles.areaInput}
-          placeholder="0,0"
-          placeholderTextColor="#8B9890"
-          keyboardType="decimal-pad"
-          value={areaTotal}
-          onChangeText={(t) => {
-            setAreaTotal(t);
-            if (erro) setErro('');
-          }}
-        />
-        <Text style={styles.unitText}>ha</Text>
+      {/* Área total * com sufixo ha */}
+      <Text style={styles.label}>Área total *</Text>
+      <View style={styles.areaRow}>
+        <View style={styles.areaInputFlex}>
+          <AuthInput
+            iconName="resize-outline"
+            iconLibrary="ion"
+            value={area}
+            onChangeText={(t) => {
+              setArea(t);
+              if (erro) setErro('');
+            }}
+            placeholder="0,0"
+            keyboardType="decimal-pad"
+            autoCapitalize="none"
+          />
+        </View>
+        <View style={styles.unitBox}>
+          <Text style={styles.unitText}>ha</Text>
+        </View>
       </View>
 
       {/* Cultura principal (opcional) */}
-      <Text style={styles.fieldLabel}>Cultura principal (opcional)</Text>
+      <Text style={styles.label}>Cultura principal (opcional)</Text>
       <TouchableOpacity
-        style={styles.selectBox}
-        onPress={() => setDropdownAberto((prev) => !prev)}
-        activeOpacity={0.8}
+        style={styles.selectorCard}
+        activeOpacity={0.85}
+        delayPressIn={0}
+        onPress={() => setMostrarCulturas((prev) => !prev)}
       >
         <Text
           style={[
-            styles.selectText,
-            !culturaPrincipal && styles.placeholderText,
+            styles.selectorText,
+            !cultura && styles.selectorPlaceholder,
           ]}
         >
-          {culturaPrincipal || 'Selecionar cultura'}
+          {cultura || 'Selecionar cultura'}
         </Text>
         <Ionicons
-          name={dropdownAberto ? 'chevron-up' : 'chevron-down'}
-          size={19}
+          name={mostrarCulturas ? 'chevron-up' : 'chevron-down'}
+          size={18}
           color="#6B7871"
         />
       </TouchableOpacity>
 
-      {dropdownAberto && (
-        <View style={styles.dropdownList}>
-          {CULTURAS.map((item) => {
-            const selecionada = culturaPrincipal === item;
+      {mostrarCulturas && (
+        <View style={styles.optionsBox}>
+          {OPCOES_CULTURA.map((opcao) => {
+            const selecionada = cultura === opcao;
             return (
               <TouchableOpacity
-                key={item}
-                style={[styles.dropdownItem, selecionada && styles.dropdownItemActive]}
+                key={opcao}
+                style={[
+                  styles.optionChip,
+                  selecionada && styles.optionChipActive,
+                ]}
+                activeOpacity={0.8}
+                delayPressIn={0}
                 onPress={() => {
-                  setCulturaPrincipal(item);
-                  setDropdownAberto(false);
+                  setCultura(opcao);
+                  setMostrarCulturas(false);
                 }}
               >
                 <Text
                   style={[
-                    styles.dropdownItemText,
-                    selecionada && styles.dropdownItemTextActive,
+                    styles.optionChipText,
+                    selecionada && styles.optionChipTextActive,
                   ]}
                 >
-                  {item}
+                  {opcao}
                 </Text>
               </TouchableOpacity>
             );
@@ -165,273 +186,234 @@ export default function CriarCamposScreen({ onBack, onCampoCriado }) {
       )}
 
       {/* Localização (opcional) */}
-      <Text style={styles.fieldLabel}>Localização (opcional)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Localidade ou coordenadas"
-        placeholderTextColor="#8B9890"
+      <Text style={styles.label}>Localização (opcional)</Text>
+      <AuthInput
+        iconName="location-outline"
+        iconLibrary="ion"
         value={localizacao}
         onChangeText={setLocalizacao}
+        placeholder="Localidade ou coordenadas"
+        autoCapitalize="sentences"
       />
 
       {/* Observações (opcional) */}
-      <Text style={styles.fieldLabel}>Observações (opcional)</Text>
-      <TextInput
-        style={styles.textArea}
-        placeholder="Adicionar notas sobre o campo..."
-        placeholderTextColor="#8B9890"
-        multiline
-        numberOfLines={4}
-        textAlignVertical="top"
+      <Text style={styles.label}>Observações (opcional)</Text>
+      <AuthInput
+        iconName="document-text-outline"
+        iconLibrary="ion"
         value={observacoes}
         onChangeText={setObservacoes}
+        placeholder="Adicionar notas sobre o campo..."
+        autoCapitalize="sentences"
       />
 
-      {/* Cartão Informativo: Parcelas do campo */}
-      <View style={styles.parcelasInfoCard}>
-        <MaterialCommunityIcons
+      {/* Nota informativa verde clara */}
+      <View style={styles.infoBanner}>
+        <Ionicons
           name="layers-outline"
-          size={22}
-          color="#526B5C"
-          style={styles.parcelasIcon}
+          size={20}
+          color="#24593F"
+          style={styles.infoIcon}
         />
-        <View style={styles.parcelasTextCol}>
-          <Text style={styles.parcelasTitle}>Parcelas do campo</Text>
-          <Text style={styles.parcelasDesc}>
-            Depois de criar o campo, pode adicionar e associar as respetivas parcelas.
+        <View style={styles.infoTextCol}>
+          <Text style={styles.infoTitle}>Parcelas do campo</Text>
+          <Text style={styles.infoSub}>
+            Depois de criar o campo, pode adicionar e associar as respetivas
+            parcelas.
           </Text>
         </View>
       </View>
 
-      {/* Mensagem de erro */}
       {erro ? <Text style={styles.errorText}>{erro}</Text> : null}
 
-      {/* Botão Primário: Criar campo */}
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={handleCriarCampo}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.primaryButtonText}>Criar campo</Text>
-      </TouchableOpacity>
+      <PrimaryButton
+        title="Criar campo"
+        showIcon={false}
+        onPress={handleGuardar}
+      />
 
-      {/* Botão Secundário: Cancelar */}
       <TouchableOpacity
-        style={styles.cancelButton}
-        onPress={onBack}
+        style={styles.cancelBtn}
         activeOpacity={0.85}
+        delayPressIn={0}
+        onPress={() => onBack && onBack()}
       >
-        <Text style={styles.cancelButtonText}>Cancelar</Text>
+        <Text style={styles.cancelText}>Cancelar</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#F4F6F3',
+  },
   container: {
+    flexGrow: 1,
     padding: 20,
-    paddingTop: 16,
-    paddingBottom: 32,
+    paddingTop: 14,
+    paddingBottom: 28,
     backgroundColor: '#F4F6F3',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    marginBottom: 18,
+    marginBottom: 16,
+    gap: 12,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E5ECE7',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
+  },
+  headerTextCol: {
+    flex: 1,
   },
   title: {
-    fontSize: 23,
+    fontSize: 21,
     fontWeight: '800',
     color: '#1E2923',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#6B7871',
     marginTop: 2,
   },
-  sectionHeaderRow: {
-    marginBottom: 14,
-  },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16.5,
     fontWeight: '800',
     color: '#1E2923',
   },
-  requiredHint: {
-    fontSize: 12,
-    color: '#7C8A82',
-    marginTop: 3,
+  sectionHelper: {
+    fontSize: 12.5,
+    color: '#6B7871',
+    marginTop: 2,
+    marginBottom: 14,
   },
-  fieldLabel: {
+  label: {
     fontSize: 13,
     fontWeight: '700',
     color: '#1E2923',
-    marginBottom: 7,
-    marginTop: 4,
+    marginBottom: 6,
   },
-  asterisk: {
-    color: '#2D6A4F',
-    fontWeight: '800',
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: 15,
-    height: 50,
-    fontSize: 14,
-    color: '#1E2923',
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-    marginBottom: 12,
-  },
-  areaInputBox: {
+  areaRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  areaInputFlex: {
+    flex: 1,
+  },
+  unitBox: {
+    height: 54,
+    paddingHorizontal: 14,
     borderRadius: 16,
-    paddingHorizontal: 15,
-    height: 50,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E9E6',
-    marginBottom: 12,
-  },
-  areaInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#1E2923',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   unitText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#7C8A82',
-    marginLeft: 8,
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#7A8680',
   },
-  selectBox: {
+  selectorCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    paddingHorizontal: 15,
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-    marginBottom: 8,
-  },
-  selectText: {
-    fontSize: 14,
-    color: '#1E2923',
-  },
-  placeholderText: {
-    color: '#8B9890',
-  },
-  dropdownList: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    paddingHorizontal: 14,
+    height: 54,
     borderWidth: 1,
     borderColor: '#E5E9E6',
     marginBottom: 12,
-    overflow: 'hidden',
   },
-  dropdownItem: {
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F4F2',
-  },
-  dropdownItemActive: {
-    backgroundColor: '#E3ECE6',
-  },
-  dropdownItemText: {
+  selectorText: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#1E2923',
   },
-  dropdownItemTextActive: {
-    fontWeight: '700',
-    color: '#1B3B2B',
+  selectorPlaceholder: {
+    color: '#8B9890',
   },
-  textArea: {
-    backgroundColor: '#FFFFFF',
+  optionsBox: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  optionChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 16,
-    paddingHorizontal: 15,
-    paddingTop: 13,
-    paddingBottom: 13,
-    minHeight: 96,
-    fontSize: 14,
-    color: '#1E2923',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E9E6',
-    marginBottom: 14,
   },
-  parcelasInfoCard: {
+  optionChipActive: {
+    backgroundColor: '#1B3B2B',
+    borderColor: '#1B3B2B',
+  },
+  optionChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#244735',
+  },
+  optionChipTextActive: {
+    color: '#FFFFFF',
+  },
+  infoBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#E3ECE6',
+    backgroundColor: '#DCEAE0',
     borderRadius: 18,
-    padding: 15,
+    padding: 14,
+    marginTop: 4,
     marginBottom: 18,
-    borderWidth: 1,
-    borderColor: '#D4E2D9',
   },
-  parcelasIcon: {
-    marginRight: 12,
+  infoIcon: {
+    marginRight: 10,
     marginTop: 2,
   },
-  parcelasTextCol: {
+  infoTextCol: {
     flex: 1,
   },
-  parcelasTitle: {
-    fontSize: 14,
+  infoTitle: {
+    fontSize: 13.5,
     fontWeight: '800',
-    color: '#2D4739',
+    color: '#1E2923',
   },
-  parcelasDesc: {
+  infoSub: {
     fontSize: 12,
-    color: '#5C7265',
-    marginTop: 3,
+    color: '#4B5D53',
+    marginTop: 2,
     lineHeight: 17,
   },
   errorText: {
-    color: '#C2410C',
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: '700',
+    color: '#B85D19',
     marginBottom: 12,
   },
-  primaryButton: {
-    backgroundColor: '#244735',
-    borderRadius: 16,
-    paddingVertical: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  cancelButton: {
+  cancelBtn: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 10,
     borderWidth: 1,
     borderColor: '#E5E9E6',
   },
-  cancelButtonText: {
-    fontSize: 15,
+  cancelText: {
+    fontSize: 14.5,
     fontWeight: '700',
     color: '#1E2923',
   },

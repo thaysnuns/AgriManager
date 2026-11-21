@@ -1,426 +1,401 @@
 // components/OperadoresScreen.js
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import SearchBar from './ui/SearchBar';
+import OperadorCard from './ui/OperadorCard';
 
 const OPERADORES_INICIAIS = [
-  { id: '1', iniciais: 'JS', nome: 'João Silva', email: 'joao@quintadovale.pt', estado: 'Ativo' },
-  { id: '2', iniciais: 'SS', nome: 'Sofia Santos', email: 'sofia@quintadovale.pt', estado: 'Ativo' },
-  { id: '3', iniciais: 'PF', nome: 'Pedro Ferreira', email: 'pedro@quintadovale.pt', estado: 'Ativo' },
-  { id: '4', iniciais: 'RA', nome: 'Rita Almeida', email: 'rita@quintadovale.pt', estado: 'Ativo' },
-  { id: '5', iniciais: 'MC', nome: 'Miguel Costa', email: 'miguel@quintadovale.pt', estado: 'Ativo' },
-  { id: '6', iniciais: 'CL', nome: 'Carla Lopes', email: 'carla@quintadovale.pt', estado: 'Ativo' },
-  { id: '7', iniciais: 'TR', nome: 'Tiago Rodrigues', email: 'tiago@quintadovale.pt', estado: 'Ativo' },
-  { id: '8', iniciais: 'BM', nome: 'Beatriz Martins', email: 'beatriz@quintadovale.pt', estado: 'Ativo' },
-  { id: '9', iniciais: 'DS', nome: 'Diogo Sousa', email: 'diogo@quintadovale.pt', estado: 'Ativo' },
-  { id: '10', iniciais: 'IN', nome: 'Inês Neves', email: 'ines@quintadovale.pt', estado: 'Ativo' },
-  { id: '11', iniciais: 'LP', nome: 'Luís Pereira', email: 'luis@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-1', nome: 'João Silva', email: 'joao@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-2', nome: 'Sofia Santos', email: 'sofia@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-3', nome: 'Pedro Ferreira', email: 'pedro@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-4', nome: 'Rita Almeida', email: 'rita@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-5', nome: 'Tiago Costa', email: 'tiago@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-6', nome: 'Beatriz Nunes', email: 'beatriz@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-7', nome: 'Carlos Rocha', email: 'carlos@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-8', nome: 'Inês Carvalho', email: 'ines@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-9', nome: 'Miguel Pinto', email: 'miguel@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-10', nome: 'Helena Sousa', email: 'helena@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-11', nome: 'André Martins', email: 'andre@quintadovale.pt', estado: 'Ativo' },
 ];
 
 const CONVITES_INICIAIS = [
-  { id: 'c1', iniciais: 'RM', nome: 'Rui Mendes', email: 'rui@quintadovale.pt', estado: 'Pendente' },
-  { id: 'c2', iniciais: 'AS', nome: 'Ana Silva', email: 'ana.silva@quintadovale.pt', estado: 'Pendente' },
-  { id: 'c3', iniciais: 'NC', nome: 'Nuno Carvalho', email: 'nuno@quintadovale.pt', estado: 'Pendente' },
+  { id: 'cv-1', nome: 'Luís Gomes', email: 'luis.gomes@quintadovale.pt', estado: 'Pendente' },
+  { id: 'cv-2', nome: 'Mariana Dias', email: 'mariana.dias@quintadovale.pt', estado: 'Pendente' },
+  { id: 'cv-3', nome: 'Diogo Teixeira', email: 'diogo.teixeira@quintadovale.pt', estado: 'Pendente' },
 ];
 
-export default function OperadoresScreen({ onBack, onAddOperador, novoOperador }) {
-  const [operadores, setOperadores] = useState(OPERADORES_INICIAIS);
-  const [convites] = useState(CONVITES_INICIAIS);
-  const [abaAtiva, setAbaAtiva] = useState('operadores');
+const POR_PAGINA = 4;
+
+export default function OperadoresScreen({
+  quintaNome = 'Quinta do Vale',
+  operadoresData = OPERADORES_INICIAIS,
+  convitesData = CONVITES_INICIAIS,
+  totalOperadoresCount,
+  totalConvitesCount,
+  onBack,
+  onSelectOperador,
+  onOpenAdicionarOperador,
+}) {
+  const [abaAtiva, setAbaAtiva] = useState('operadores'); // 'operadores' | 'convites'
   const [pesquisa, setPesquisa] = useState('');
   const [pagina, setPagina] = useState(1);
 
-  const itensPorPagina = 4;
+  const countOperadores = totalOperadoresCount ?? operadoresData.length;
+  const countConvites = totalConvitesCount ?? convitesData.length;
 
   useEffect(() => {
-    if (!novoOperador) return;
-    const partes = novoOperador.nome.trim().split(/\s+/).filter(Boolean);
-    const iniciais =
-      partes.length === 0
-        ? 'OP'
-        : partes.length === 1
-        ? partes[0].slice(0, 2).toUpperCase()
-        : (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
-
-    const criado = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      iniciais,
-      nome: novoOperador.nome.trim(),
-      email: novoOperador.email.trim().toLowerCase(),
-      estado: 'Ativo',
-    };
-
-    setOperadores((prev) => [criado, ...prev]);
-    setAbaAtiva('operadores');
     setPagina(1);
-  }, [novoOperador]);
+  }, [abaAtiva, pesquisa]);
 
-  const listaAtual = abaAtiva === 'operadores' ? operadores : convites;
-  const listaFiltrada = listaAtual.filter(
-    (item) =>
-      item.nome.toLowerCase().includes(pesquisa.toLowerCase()) ||
-      item.email.toLowerCase().includes(pesquisa.toLowerCase())
-  );
+  const listaBase = abaAtiva === 'operadores' ? operadoresData : convitesData;
+
+  const listaFiltrada = useMemo(() => {
+    const termo = pesquisa.trim().toLowerCase();
+    if (!termo) return listaBase;
+    return listaBase.filter(
+      (item) =>
+        (item.nome || '').toLowerCase().includes(termo) ||
+        (item.email || '').toLowerCase().includes(termo)
+    );
+  }, [listaBase, pesquisa]);
 
   const totalItens = listaFiltrada.length;
-  const totalPaginas = Math.max(1, Math.ceil(totalItens / itensPorPagina));
+  const totalPaginas = Math.max(1, Math.ceil(totalItens / POR_PAGINA));
   const paginaSegura = Math.min(pagina, totalPaginas);
-  const inicioIdx = (paginaSegura - 1) * itensPorPagina;
-  const fimIdx = Math.min(inicioIdx + itensPorPagina, totalItens);
-  const itensPaginados = listaFiltrada.slice(inicioIdx, fimIdx);
+  const inicioIdx = (paginaSegura - 1) * POR_PAGINA;
+  const itensPagina = listaFiltrada.slice(inicioIdx, inicioIdx + POR_PAGINA);
+
+  const fimIdx = Math.min(inicioIdx + itensPagina.length, totalItens);
+  const labelUnidade = abaAtiva === 'operadores' ? 'operadores' : 'convites';
+  const resumoPaginacao =
+    totalItens === 0
+      ? `0 ${labelUnidade}`
+      : `${inicioIdx + 1}–${fimIdx} de ${totalItens} ${labelUnidade}`;
 
   return (
-    <View style={styles.wrapper}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Ionicons name="arrow-back" size={20} color="#1E2923" />
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.title}>Operadores</Text>
-            <Text style={styles.subtitle}>Perfil · Equipa e permissões</Text>
-          </View>
-        </View>
-
-        <View style={styles.farmCard}>
-          <View style={styles.farmIconBox}>
-            <MaterialCommunityIcons name="office-building-outline" size={22} color="#1B3B2B" />
-          </View>
-          <View>
-            <Text style={styles.farmTitle}>Quinta do Vale</Text>
-            <Text style={styles.farmSub}>
-              {operadores.length} operadores · {convites.length} convites
-            </Text>
-          </View>
-        </View>
-
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Cabeçalho */}
+      <View style={styles.headerRow}>
         <TouchableOpacity
-          style={styles.addBannerButton}
-          onPress={onAddOperador}
-          activeOpacity={0.85}
+          style={styles.backBtn}
+          activeOpacity={0.8}
+          delayPressIn={0}
+          onPress={() => onBack && onBack()}
         >
-          <Ionicons name="person-add-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.addBannerText}>Adicionar operador</Text>
+          <Ionicons name="arrow-back" size={20} color="#1E2923" />
         </TouchableOpacity>
 
-        <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={19} color="#6B7871" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Pesquisar por nome ou e-mail"
-            placeholderTextColor="#7C8A82"
-            value={pesquisa}
-            onChangeText={(text) => {
-              setPesquisa(text);
-              setPagina(1);
-            }}
-          />
+        <View style={styles.headerTextCol}>
+          <Text style={styles.title}>Operadores</Text>
+          <Text style={styles.subtitle}>Perfil · Equipa e permissões</Text>
         </View>
+      </View>
 
-        <View style={styles.tabsRow}>
-          <TouchableOpacity
-            style={[styles.tabPill, abaAtiva === 'operadores' && styles.tabPillActive]}
-            onPress={() => {
-              setAbaAtiva('operadores');
-              setPagina(1);
-            }}
-          >
-            <Text style={[styles.tabText, abaAtiva === 'operadores' && styles.tabTextActive]}>
-              Operadores {operadores.length}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabPill, abaAtiva === 'convites' && styles.tabPillActive]}
-            onPress={() => {
-              setAbaAtiva('convites');
-              setPagina(1);
-            }}
-          >
-            <Text style={[styles.tabText, abaAtiva === 'convites' && styles.tabTextActive]}>
-              Convites {convites.length}
-            </Text>
-          </TouchableOpacity>
+      {/* Cartão Verde Escuro da Quinta */}
+      <View style={styles.quintaCard}>
+        <View style={styles.quintaIconBox}>
+          <Ionicons name="business-outline" size={22} color="#24593F" />
         </View>
-
-        {itensPaginados.map((item) => {
-          const isAtivo = item.estado === 'Ativo';
-          return (
-            <View key={item.id} style={styles.userCard}>
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>{item.iniciais}</Text>
-              </View>
-
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{item.nome}</Text>
-                <Text style={styles.userEmail}>{item.email}</Text>
-              </View>
-
-              <View style={styles.statusRow}>
-                <View
-                  style={[
-                    styles.statusDot,
-                    { backgroundColor: isAtivo ? '#2D6A4F' : '#C26D1F' },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.statusText,
-                    { color: isAtivo ? '#2D6A4F' : '#C26D1F' },
-                  ]}
-                >
-                  {item.estado}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
-
-        <View style={styles.paginationRow}>
-          <Text style={styles.paginationText}>
-            {totalItens === 0
-              ? '0 operadores'
-              : `${inicioIdx + 1}–${fimIdx} de ${totalItens} ${
-                  abaAtiva === 'operadores' ? 'operadores' : 'convites'
-                }`}
+        <View style={styles.quintaInfoCol}>
+          <Text numberOfLines={1} style={styles.quintaTitle}>
+            {quintaNome}
           </Text>
-
-          <View style={styles.paginationButtons}>
-            <TouchableOpacity
-              style={[styles.pageBtn, paginaSegura <= 1 && styles.pageBtnDisabled]}
-              disabled={paginaSegura <= 1}
-              onPress={() => setPagina((p) => Math.max(1, p - 1))}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={18}
-                color={paginaSegura <= 1 ? '#B8C2BC' : '#1E2923'}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.pageBtn, paginaSegura >= totalPaginas && styles.pageBtnDisabled]}
-              disabled={paginaSegura >= totalPaginas}
-              onPress={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
-            >
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={paginaSegura >= totalPaginas ? '#B8C2BC' : '#1E2923'}
-              />
-            </TouchableOpacity>
-          </View>
+          <Text numberOfLines={1} style={styles.quintaSub}>
+            {countOperadores} operadores · {countConvites} convites
+          </Text>
         </View>
-      </ScrollView>
-    </View>
+      </View>
+
+      {/* Botão Adicionar operador */}
+      <TouchableOpacity
+        style={styles.addOperadorBtn}
+        activeOpacity={0.86}
+        delayPressIn={0}
+        onPress={() => onOpenAdicionarOperador && onOpenAdicionarOperador()}
+      >
+        <Ionicons name="person-add-outline" size={18} color="#FFFFFF" />
+        <Text style={styles.addOperadorText}>Adicionar operador</Text>
+      </TouchableOpacity>
+
+      {/* Barra de pesquisa reutilizável */}
+      <SearchBar
+        value={pesquisa}
+        onChangeText={setPesquisa}
+        placeholder="Pesquisar por nome ou e-mail"
+        style={styles.searchSpacing}
+      />
+
+      {/* Chips de filtro */}
+      <View style={styles.chipsRow}>
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            abaAtiva === 'operadores' && styles.chipActive,
+          ]}
+          activeOpacity={0.8}
+          delayPressIn={0}
+          onPress={() => setAbaAtiva('operadores')}
+        >
+          <Text
+            style={[
+              styles.chipText,
+              abaAtiva === 'operadores' && styles.chipTextActive,
+            ]}
+          >
+            Operadores {countOperadores}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            abaAtiva === 'convites' && styles.chipActive,
+          ]}
+          activeOpacity={0.8}
+          delayPressIn={0}
+          onPress={() => setAbaAtiva('convites')}
+        >
+          <Text
+            style={[
+              styles.chipText,
+              abaAtiva === 'convites' && styles.chipTextActive,
+            ]}
+          >
+            Convites {countConvites}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Lista de OperadorCard */}
+      {itensPagina.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyText}>
+            Nenhum registo encontrado para &ldquo;{pesquisa.trim()}&rdquo;.
+          </Text>
+        </View>
+      ) : (
+        itensPagina.map((operador) => (
+          <OperadorCard
+            key={operador.id}
+            operador={operador}
+            onPress={(item) => onSelectOperador && onSelectOperador(item)}
+          />
+        ))
+      )}
+
+      {/* Rodapé de paginação */}
+      <View style={styles.paginationRow}>
+        <Text style={styles.paginationText}>{resumoPaginacao}</Text>
+
+        <View style={styles.paginationBtns}>
+          <TouchableOpacity
+            style={[
+              styles.pageBtn,
+              paginaSegura <= 1 && styles.pageBtnDisabled,
+            ]}
+            activeOpacity={0.8}
+            delayPressIn={0}
+            disabled={paginaSegura <= 1}
+            onPress={() => setPagina((prev) => Math.max(1, prev - 1))}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={16}
+              color={paginaSegura <= 1 ? '#B6C0BA' : '#1E2923'}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.pageBtn,
+              paginaSegura >= totalPaginas && styles.pageBtnDisabled,
+            ]}
+            activeOpacity={0.8}
+            delayPressIn={0}
+            disabled={paginaSegura >= totalPaginas}
+            onPress={() =>
+              setPagina((prev) => Math.min(totalPaginas, prev + 1))
+            }
+          >
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={paginaSegura >= totalPaginas ? '#B6C0BA' : '#1E2923'}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
-  wrapper: {
+  scrollView: {
     flex: 1,
     backgroundColor: '#F4F6F3',
   },
   container: {
+    flexGrow: 1,
     padding: 20,
-    paddingTop: 16,
-    paddingBottom: 30,
+    paddingTop: 14,
+    paddingBottom: 28,
+    backgroundColor: '#F4F6F3',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    marginBottom: 18,
+    marginBottom: 16,
+    gap: 12,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E9E6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTextCol: {
+    flex: 1,
   },
   title: {
-    fontSize: 25,
+    fontSize: 22,
     fontWeight: '800',
     color: '#1E2923',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#6B7871',
     marginTop: 2,
   },
-  farmCard: {
+  quintaCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1B3B2B',
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     marginBottom: 12,
   },
-  farmIconBox: {
-    width: 44,
-    height: 44,
+  quintaIconBox: {
+    width: 46,
+    height: 46,
     borderRadius: 14,
-    backgroundColor: '#DCE6DF',
+    backgroundColor: '#DCE8E0',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
   },
-  farmTitle: {
-    fontSize: 16,
+  quintaInfoCol: {
+    flex: 1,
+  },
+  quintaTitle: {
+    fontSize: 17,
     fontWeight: '800',
     color: '#FFFFFF',
   },
-  farmSub: {
-    fontSize: 12,
-    color: '#C7D6CD',
-    marginTop: 3,
+  quintaSub: {
+    fontSize: 12.5,
+    color: '#C8D8CE',
+    marginTop: 2,
   },
-  addBannerButton: {
+  addOperadorBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    backgroundColor: '#2B533E',
+    gap: 8,
+    backgroundColor: '#244735',
     borderRadius: 16,
-    paddingVertical: 14,
-    marginBottom: 14,
+    paddingVertical: 13,
+    marginBottom: 12,
   },
-  addBannerText: {
-    fontSize: 15,
-    fontWeight: '700',
+  addOperadorText: {
+    fontSize: 14.5,
+    fontWeight: '800',
     color: '#FFFFFF',
   },
-  searchBox: {
+  searchSpacing: {
+    marginBottom: 12,
+  },
+  chipsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 46,
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
+    gap: 8,
     marginBottom: 14,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    color: '#1E2923',
-  },
-  tabsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  tabPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E9E6',
   },
-  tabPillActive: {
+  chipActive: {
     backgroundColor: '#1B3B2B',
     borderColor: '#1B3B2B',
   },
-  tabText: {
-    fontSize: 13,
+  chipText: {
+    fontSize: 12.5,
     fontWeight: '700',
-    color: '#475569',
+    color: '#244735',
   },
-  tabTextActive: {
+  chipTextActive: {
     color: '#FFFFFF',
   },
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  emptyBox: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    padding: 14,
-    marginBottom: 11,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#DCE8E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  avatarText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#1B3B2B',
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1E2923',
-  },
-  userEmail: {
-    fontSize: 12,
-    color: '#6B7871',
-    marginTop: 2,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  paginationRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  paginationText: {
-    fontSize: 12,
-    color: '#6B7871',
-  },
-  paginationButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pageBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
+    padding: 20,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E9E6',
+    marginBottom: 10,
+  },
+  emptyText: {
+    fontSize: 13.5,
+    color: '#6B7871',
+  },
+  paginationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 6,
+    paddingHorizontal: 2,
+  },
+  paginationText: {
+    fontSize: 12.5,
+    color: '#6B7871',
+  },
+  paginationBtns: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pageBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   pageBtnDisabled: {
-    backgroundColor: '#F4F6F3',
+    backgroundColor: '#F7F9F7',
+    borderColor: '#ECEFEA',
   },
 });

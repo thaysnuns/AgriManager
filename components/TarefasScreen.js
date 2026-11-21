@@ -1,5 +1,5 @@
 // components/TarefasScreen.js
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,190 +7,215 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import DiaChip from './ui/DiaChip';
+import TarefaCard from './ui/TarefaCard';
 
 const DIAS_SEMANA = [
-  { id: '28', dia: 'Seg', num: '28' },
-  { id: '29', dia: 'Ter', num: '29' },
-  { id: '30', dia: 'Qua', num: '30' },
-  { id: '01', dia: 'Qui', num: '01' },
-  { id: '02', dia: 'Sex', num: '02' },
+  { id: 'd-28', diaSemana: 'Seg', numeroDia: '28', concluida: 3, total: 8 },
+  { id: 'd-29', diaSemana: 'Ter', numeroDia: '29', concluida: 2, total: 6 },
+  { id: 'd-30', diaSemana: 'Qua', numeroDia: '30', concluida: 4, total: 7 },
+  { id: 'd-01', diaSemana: 'Qui', numeroDia: '01', concluida: 1, total: 5 },
+  { id: 'd-02', diaSemana: 'Sex', numeroDia: '02', concluida: 0, total: 4 },
 ];
 
 const TAREFAS_EM_CURSO = [
   {
-    id: '1',
+    id: 't-1',
+    diaId: 'd-28',
     titulo: 'Rega · Olival Norte',
     subtitulo: '18:00–20:00 · João e Rui',
-    badge: 'ALTA PRIORIDADE',
-    badgeColor: '#C26D1F',
-    iconLib: 'Ionicons',
-    iconName: 'water-outline',
-    iconBg: '#F6E8D8',
-    iconColor: '#C26D1F',
+    estado: 'ALTA PRIORIDADE',
   },
   {
-    id: '2',
+    id: 't-2',
+    diaId: 'd-28',
     titulo: 'Inspeção fitossanitária',
     subtitulo: 'Vinha VP-03 · Ana Santos',
-    badge: 'EM CURSO',
-    badgeColor: '#2B6CB0',
-    iconLib: 'Ionicons',
-    iconName: 'scan-outline',
-    iconBg: '#E2ECF5',
-    iconColor: '#2B6CB0',
+    estado: 'EM CURSO',
   },
 ];
 
 const TAREFAS_A_SEGUIR = [
   {
-    id: '3',
+    id: 't-3',
+    diaId: 'd-28',
     titulo: 'Verificar setor de rega 4',
     subtitulo: '15:30 · Olival ON-02',
-    badge: 'PENDENTE',
-    badgeColor: '#2D6A4F',
-    iconLib: 'Ionicons',
-    iconName: 'build-outline',
-    iconBg: '#E3ECE6',
-    iconColor: '#1B3B2B',
+    estado: 'PENDENTE',
   },
   {
-    id: '4',
+    id: 't-4',
+    diaId: 'd-28',
     titulo: 'Preparar colheita',
     subtitulo: '17:00 · Cereal Sul',
-    badge: 'PENDENTE',
-    badgeColor: '#2D6A4F',
-    iconLib: 'MaterialCommunityIcons',
-    iconName: 'tractor',
-    iconBg: '#E3ECE6',
-    iconColor: '#1B3B2B',
+    estado: 'PENDENTE',
   },
   {
-    id: '5',
+    id: 't-5',
+    diaId: 'd-28',
     titulo: 'Registo de tratamentos',
     subtitulo: 'Até às 19:00 · Vinha',
-    badge: 'PENDENTE',
-    badgeColor: '#2D6A4F',
-    iconLib: 'Ionicons',
-    iconName: 'clipboard-outline',
-    iconBg: '#E3ECE6',
-    iconColor: '#1B3B2B',
+    estado: 'PENDENTE',
   },
 ];
 
-export default function TarefasScreen() {
-  const [selectedDay, setSelectedDay] = useState('28');
+export default function TarefasScreen({
+  onSelectTarefa,
+  onOpenCriarTarefa,
+}) {
+  const [selectedDiaId, setSelectedDiaId] = useState('d-28');
 
-  const renderIcon = (item) => {
-    if (item.iconLib === 'MaterialCommunityIcons') {
-      return <MaterialCommunityIcons name={item.iconName} size={22} color={item.iconColor} />;
-    }
-    return <Ionicons name={item.iconName} size={22} color={item.iconColor} />;
-  };
+  const diaAtual = useMemo(
+    () => DIAS_SEMANA.find((d) => d.id === selectedDiaId) || DIAS_SEMANA[0],
+    [selectedDiaId]
+  );
+
+  const emCursoFiltradas = useMemo(() => {
+    if (selectedDiaId === 'd-28') return TAREFAS_EM_CURSO;
+    return [
+      {
+        id: `${selectedDiaId}-ec-1`,
+        titulo: `Acompanhamento de campo · ${diaAtual.diaSemana} ${diaAtual.numeroDia}`,
+        subtitulo: '09:00–12:00 · Equipa técnica',
+        estado: 'EM CURSO',
+      },
+    ];
+  }, [selectedDiaId, diaAtual]);
+
+  const aSeguirFiltradas = useMemo(() => {
+    if (selectedDiaId === 'd-28') return TAREFAS_A_SEGUIR;
+    return [
+      {
+        id: `${selectedDiaId}-as-1`,
+        titulo: 'Monitorização de humidade do solo',
+        subtitulo: '14:30 · Parcelas ativas',
+        estado: 'PENDENTE',
+      },
+      {
+        id: `${selectedDiaId}-as-2`,
+        titulo: 'Atualização de diário agrícola',
+        subtitulo: 'Até às 18:00 · Quinta',
+        estado: 'PENDENTE',
+      },
+    ];
+  }, [selectedDiaId]);
+
+  const progressoPercent = Math.max(
+    0,
+    Math.min(100, Math.round((diaAtual.concluida / Math.max(1, diaAtual.total)) * 100))
+  );
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Cabeçalho */}
       <View style={styles.headerRow}>
-        <View>
+        <View style={styles.headerTextCol}>
           <Text style={styles.title}>Tarefas</Text>
-          <Text style={styles.subtitle}>8 hoje · 3 concluídas</Text>
+          <Text style={styles.subtitle}>
+            {diaAtual.total} hoje · {diaAtual.concluida} concluídas
+          </Text>
         </View>
-        <TouchableOpacity style={styles.addButton}>
-          <Ionicons name="add" size={24} color="#1E2923" />
+
+        <TouchableOpacity
+          style={styles.addBtn}
+          activeOpacity={0.85}
+          delayPressIn={0}
+          onPress={() => onOpenCriarTarefa && onOpenCriarTarefa(diaAtual)}
+        >
+          <Ionicons name="add" size={22} color="#1E2923" />
         </TouchableOpacity>
       </View>
 
-      {/* Seletor de Dias da Semana */}
+      {/* Seletor de Dias (Componente DiaChip) */}
       <View style={styles.daysRow}>
-        {DIAS_SEMANA.map((d) => {
-          const isActive = selectedDay === d.id;
-          return (
-            <TouchableOpacity
-              key={d.id}
-              style={[styles.dayCard, isActive && styles.dayCardActive]}
-              onPress={() => setSelectedDay(d.id)}
-            >
-              <Text style={[styles.dayName, isActive && styles.dayTextActive]}>{d.dia}</Text>
-              <Text style={[styles.dayNum, isActive && styles.dayTextActive]}>{d.num}</Text>
-            </TouchableOpacity>
-          );
-        })}
+        {DIAS_SEMANA.map((dia) => (
+          <DiaChip
+            key={dia.id}
+            dia={dia}
+            isSelected={dia.id === selectedDiaId}
+            onPress={(item) => setSelectedDiaId(item.id)}
+          />
+        ))}
       </View>
 
-      {/* Cartão: Progresso de hoje */}
+      {/* Cartão Progresso de hoje */}
       <View style={styles.progressCard}>
         <View style={styles.progressHeader}>
           <Text style={styles.progressTitle}>Progresso de hoje</Text>
-          <Text style={styles.progressCount}>3 de 8</Text>
+          <Text style={styles.progressCounter}>
+            {diaAtual.concluida} de {diaAtual.total}
+          </Text>
         </View>
-        <View style={styles.progressBg}>
-          <View style={[styles.progressFill, { width: '37.5%' }]} />
+        <View style={styles.progressTrack}>
+          <View
+            style={[styles.progressFill, { width: `${progressoPercent}%` }]}
+          />
         </View>
       </View>
 
       {/* Secção: Em curso */}
-      <View style={styles.sectionHeader}>
+      <View style={styles.sectionRow}>
         <Text style={styles.sectionTitle}>Em curso</Text>
-        <Text style={styles.sectionLink}>2 tarefas</Text>
+        <Text style={styles.sectionMeta}>
+          {emCursoFiltradas.length}{' '}
+          {emCursoFiltradas.length === 1 ? 'tarefa' : 'tarefas'}
+        </Text>
       </View>
 
-      {TAREFAS_EM_CURSO.map((item) => (
-        <View key={item.id} style={styles.taskCard}>
-          <View style={[styles.taskIconBox, { backgroundColor: item.iconBg }]}>
-            {renderIcon(item)}
-          </View>
-
-          <View style={styles.taskInfo}>
-            <Text style={styles.taskTitle}>{item.titulo}</Text>
-            <Text style={styles.taskSub}>{item.subtitulo}</Text>
-          </View>
-
-          <Text style={[styles.taskBadge, { color: item.badgeColor }]}>{item.badge}</Text>
-        </View>
+      {emCursoFiltradas.map((tarefa) => (
+        <TarefaCard
+          key={tarefa.id}
+          tarefa={tarefa}
+          onPress={(item) => onSelectTarefa && onSelectTarefa(item)}
+        />
       ))}
 
       {/* Secção: A seguir */}
-      <View style={[styles.sectionHeader, { marginTop: 10 }]}>
+      <View style={[styles.sectionRow, styles.sectionSpacing]}>
         <Text style={styles.sectionTitle}>A seguir</Text>
-        <TouchableOpacity>
-          <Text style={styles.sectionLink}>Ver agenda</Text>
-        </TouchableOpacity>
+        <Text style={styles.sectionAction}>Ver agenda</Text>
       </View>
 
-      {TAREFAS_A_SEGUIR.map((item) => (
-        <View key={item.id} style={styles.taskCard}>
-          <View style={[styles.taskIconBox, { backgroundColor: item.iconBg }]}>
-            {renderIcon(item)}
-          </View>
-
-          <View style={styles.taskInfo}>
-            <Text style={styles.taskTitle}>{item.titulo}</Text>
-            <Text style={styles.taskSub}>{item.subtitulo}</Text>
-          </View>
-
-          <Text style={[styles.taskBadge, { color: item.badgeColor }]}>{item.badge}</Text>
-        </View>
+      {aSeguirFiltradas.map((tarefa) => (
+        <TarefaCard
+          key={tarefa.id}
+          tarefa={tarefa}
+          onPress={(item) => onSelectTarefa && onSelectTarefa(item)}
+        />
       ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#F4F6F3',
+  },
   container: {
+    flexGrow: 1,
     padding: 20,
-    paddingTop: 16,
-    paddingBottom: 30,
+    paddingTop: 14,
+    paddingBottom: 28,
     backgroundColor: '#F4F6F3',
   },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 18,
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  headerTextCol: {
+    flex: 1,
+    marginRight: 12,
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
     color: '#1E2923',
   },
@@ -199,139 +224,79 @@ const styles = StyleSheet.create({
     color: '#6B7871',
     marginTop: 2,
   },
-  addButton: {
+  addBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E9E6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   daysRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 18,
     gap: 8,
-  },
-  dayCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-  },
-  dayCardActive: {
-    backgroundColor: '#1B3B2B',
-    borderColor: '#1B3B2B',
-  },
-  dayName: {
-    fontSize: 12,
-    color: '#6B7871',
-    marginBottom: 4,
-  },
-  dayNum: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#1E2923',
-  },
-  dayTextActive: {
-    color: '#FFFFFF',
+    marginBottom: 14,
   },
   progressCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    padding: 16,
-    marginBottom: 22,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
   },
   progressHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 10,
   },
   progressTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#1E2923',
   },
-  progressCount: {
-    fontSize: 13,
+  progressCounter: {
+    fontSize: 13.5,
     fontWeight: '800',
-    color: '#2D6A4F',
+    color: '#1E2923',
   },
-  progressBg: {
-    height: 7,
-    backgroundColor: '#E5E9E6',
-    borderRadius: 4,
+  progressTrack: {
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: '#E5EAE7',
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
+    borderRadius: 999,
     backgroundColor: '#1B3B2B',
-    borderRadius: 4,
   },
-  sectionHeader: {
+  sectionRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  sectionSpacing: {
+    marginTop: 8,
   },
   sectionTitle: {
     fontSize: 17,
-    fontWeight: '700',
-    color: '#1E2923',
-  },
-  sectionLink: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#2D6A4F',
-  },
-  taskCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  taskIconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  taskInfo: {
-    flex: 1,
-  },
-  taskTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1E2923',
-  },
-  taskSub: {
-    fontSize: 12,
-    color: '#6B7871',
-    marginTop: 3,
-  },
-  taskBadge: {
-    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    color: '#1E2923',
+  },
+  sectionMeta: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: '#6B7871',
+  },
+  sectionAction: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2D6A4F',
   },
 });

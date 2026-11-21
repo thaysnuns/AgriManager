@@ -1,4 +1,3 @@
-// App.js
 import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -6,72 +5,138 @@ import { StatusBar } from 'expo-status-bar';
 import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
 import HomeScreen from './components/HomeScreen';
-import CamposScreen from './components/CamposScreen';
+import CamposScreen, { CAMPOS_SCREEN_INICIAIS } from './components/CamposScreen';
 import CampoDetalheScreen from './components/CampoDetalheScreen';
+import CriarCamposScreen from './components/CriarCamposScreen';
+import EditarCamposScreen from './components/EditarCamposScreen';
 import ParcelasScreen from './components/ParcelasScreen';
 import ParcelaDetalheScreen from './components/ParcelaDetalheScreen';
 import PlantacoesScreen from './components/PlantacoesScreen';
-import PerfilScreen from './components/PerfilScreen';
 import TarefasScreen from './components/TarefasScreen';
+import PerfilScreen from './components/PerfilScreen';
+import OperadoresScreen from './components/OperadoresScreen';
+import RegistarOperadorScreen from './components/RegistarOperadorScreen';
 import BottomNav from './components/BottomNav';
 
-export default function App() {
-  const [authScreen, setAuthScreen] = useState('login'); // 'login' | 'register' | 'app'
-  const [activeTab, setActiveTab] = useState('inicio'); // 'inicio' | 'campos' | 'parcelas' | 'plantacoes' | 'perfil'
+const OPERADORES_INICIAIS = [
+  { id: 'op-1', nome: 'António Silva', email: 'antonio.silva@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-2', nome: 'Beatriz Ferreira', email: 'beatriz.ferreira@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-3', nome: 'Carlos Mendes', email: 'carlos.mendes@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-4', nome: 'Diogo Almeida', email: 'diogo.almeida@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-5', nome: 'Elsa Rocha', email: 'elsa.rocha@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-6', nome: 'Fernando Costa', email: 'fernando.costa@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-7', nome: 'Graça Ribeiro', email: 'graca.ribeiro@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-8', nome: 'Hélder Pereira', email: 'helder.pereira@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-9', nome: 'Inês Carvalho', email: 'ines.carvalho@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-10', nome: 'João Martins', email: 'joao.martins@quintadovale.pt', estado: 'Ativo' },
+  { id: 'op-11', nome: 'Luísa Sousa', email: 'luisa.sousa@quintadovale.pt', estado: 'Ativo' },
+];
 
+const CONVITES_INICIAIS = [
+  { id: 'cv-1', email: 'miguel.teixeira@quintadovale.pt', estado: 'Pendente' },
+  { id: 'cv-2', email: 'nuria.gomes@quintadovale.pt', estado: 'Pendente' },
+  { id: 'cv-3', email: 'paulo.oliveira@quintadovale.pt', estado: 'Pendente' },
+];
+
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [authScreen, setAuthScreen] = useState('login');
+
+  const [activeScreen, setActiveScreen] = useState('campos');
+  const [campos, setCampos] = useState(CAMPOS_SCREEN_INICIAIS);
+  const [camposSubScreen, setCamposSubScreen] = useState(null);
+  const [campoEmEdicao, setCampoEmEdicao] = useState(null);
   const [selectedCampo, setSelectedCampo] = useState(null);
+
   const [campoFiltroParcelas, setCampoFiltroParcelas] = useState(null);
   const [selectedParcela, setSelectedParcela] = useState(null);
   const [selectedPlantacao, setSelectedPlantacao] = useState(null);
-  const [subScreenPerfil, setSubScreenPerfil] = useState(null); // null | 'tarefas'
+  const [selectedTarefa, setSelectedTarefa] = useState(null);
 
-  const limparSubEcransTab = () => {
+  const [perfilSubScreen, setPerfilSubScreen] = useState(null);
+  const [operadores, setOperadores] = useState(OPERADORES_INICIAIS);
+  const [convites] = useState(CONVITES_INICIAIS);
+  const [selectedOperador, setSelectedOperador] = useState(null);
+
+  const limparDetalhes = () => {
     setSelectedCampo(null);
     setSelectedParcela(null);
     setSelectedPlantacao(null);
-    setSubScreenPerfil(null);
+    setSelectedTarefa(null);
+    setSelectedOperador(null);
+    setCamposSubScreen(null);
+    setCampoEmEdicao(null);
+    setPerfilSubScreen(null);
   };
 
-  const handleSelectTab = (tabKey) => {
-    setActiveTab(tabKey);
-    limparSubEcransTab();
-    if (tabKey !== 'parcelas') {
+  const handleNavigate = (tab) => {
+    limparDetalhes();
+    if (tab !== 'parcelas') {
       setCampoFiltroParcelas(null);
+    }
+    setActiveScreen(tab);
+  };
+
+  const handleAdicionarOperador = (novoOperador) => {
+    const item = {
+      id: `op-${Date.now()}`,
+      nome: novoOperador.nome,
+      email: novoOperador.email,
+      estado: novoOperador.estado || 'Ativo',
+    };
+    setOperadores((prev) => [item, ...prev]);
+    setPerfilSubScreen('operadores');
+  };
+
+  const handleEliminarCampo = (campoAlvo) => {
+    if (!campoAlvo?.id) return;
+    setCampos((prev) => prev.filter((item) => item.id !== campoAlvo.id));
+    if (selectedCampo?.id === campoAlvo.id) {
+      setSelectedCampo(null);
     }
   };
 
-  if (authScreen === 'login') {
+  if (!isAuthenticated) {
+    if (authScreen === 'register') {
+      return (
+        <SafeAreaView style={styles.safeArea}>
+          <StatusBar style="dark" />
+          <View style={styles.contentContainer}>
+            <RegisterScreen
+              onBackToLogin={() => setAuthScreen('login')}
+              onRegisterSuccess={() => {
+                setIsAuthenticated(true);
+                setActiveScreen('inicio');
+              }}
+            />
+          </View>
+        </SafeAreaView>
+      );
+    }
+
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="dark" />
-        <LoginScreen
-          onLoginSuccess={() => {
-            setActiveTab('inicio');
-            limparSubEcransTab();
-            setAuthScreen('app');
-          }}
-          onGoToRegister={() => setAuthScreen('register')}
-        />
+        <View style={styles.contentContainer}>
+          <LoginScreen
+            onOpenRegister={() => setAuthScreen('register')}
+            onLoginSuccess={() => {
+              setIsAuthenticated(true);
+              setActiveScreen('inicio');
+            }}
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
-  if (authScreen === 'register') {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
-        <RegisterScreen
-          onRegisterSuccess={() => {
-            setActiveTab('inicio');
-            limparSubEcransTab();
-            setAuthScreen('app');
-          }}
-          onBackToLogin={() => setAuthScreen('login')}
-        />
-      </SafeAreaView>
-    );
-  }
+  const bottomNavActiveTab =
+    activeScreen === 'tarefas' ? 'inicio' : activeScreen;
 
+  const totalUtilizadoresResumo =
+    operadores.length + convites.length === 14 && operadores.length === 11
+      ? '12 utilizadores · 3 convites'
+      : `${operadores.length} operadores · ${convites.length} convites`;
   const renderMainContent = () => {
     if (selectedParcela) {
       return (
@@ -82,12 +147,14 @@ export default function App() {
       );
     }
 
-    if (activeTab === 'inicio') {
+    if (activeScreen === 'inicio') {
       return (
         <HomeScreen
-          onNavigateTab={(tab) => handleSelectTab(tab)}
+          onNavigateTab={(tab) => handleNavigate(tab)}
           onSelectCampo={(campo) => {
-            setActiveTab('campos');
+            limparDetalhes();
+            setCampoFiltroParcelas(null);
+            setActiveScreen('campos');
             setSelectedCampo(campo);
           }}
           onSelectParcela={(parcela) => setSelectedParcela(parcela)}
@@ -95,35 +162,99 @@ export default function App() {
       );
     }
 
-    if (activeTab === 'campos') {
+    if (activeScreen === 'campos') {
+      if (camposSubScreen === 'criar') {
+        return (
+          <CriarCamposScreen
+            onBack={() => setCamposSubScreen(null)}
+            onCriarCampo={(novoCampo) => {
+              const campoFormatado = {
+                id: novoCampo.id || `campo-${Date.now()}`,
+                codigo:
+                  novoCampo.codigo ||
+                  `CP-${String(campos.length + 1).padStart(2, '0')}`,
+                nome: novoCampo.nome,
+                area: novoCampo.area,
+                cultura: novoCampo.cultura,
+                tipoCultura: 'olival',
+                estado: 'Ativo',
+                estadoTitulo: 'Saudável',
+                detalheEstado: 'NDVI 0,78',
+                alerta: false,
+                iconBg: '#E1ECE4',
+                iconColor: '#2A6F4E',
+                parcelasCount: novoCampo.parcelasCount ?? 0,
+                zona: novoCampo.zona || novoCampo.localizacao || 'Exploração',
+                localizacao: novoCampo.localizacao || '',
+                observacoes: novoCampo.observacoes || '',
+              };
+              setCampos((prev) => [campoFormatado, ...prev]);
+              setCamposSubScreen(null);
+            }}
+          />
+        );
+      }
+
+      if (camposSubScreen === 'editar' && campoEmEdicao) {
+        return (
+          <EditarCamposScreen
+            campo={campoEmEdicao}
+            onBack={() => {
+              setCampoEmEdicao(null);
+              setCamposSubScreen(null);
+            }}
+            onGuardarAlteracoes={(campoAtualizado) => {
+              setCampos((prev) =>
+                prev.map((item) =>
+                  item.id === campoAtualizado.id ? campoAtualizado : item
+                )
+              );
+              if (selectedCampo?.id === campoAtualizado.id) {
+                setSelectedCampo(campoAtualizado);
+              }
+              setCampoEmEdicao(null);
+              setCamposSubScreen(null);
+            }}
+          />
+        );
+      }
+
       if (selectedCampo) {
         return (
           <CampoDetalheScreen
             campo={selectedCampo}
             onBack={() => setSelectedCampo(null)}
             onVerParcelasCampo={(campo) => {
-              setCampoFiltroParcelas(campo);
               setSelectedCampo(null);
-              setActiveTab('parcelas');
+              setCampoFiltroParcelas(campo);
+              setActiveScreen('parcelas');
             }}
           />
         );
       }
+
       return (
         <CamposScreen
+          camposData={campos}
           onSelectCampo={(campo) => setSelectedCampo(campo)}
+          onOpenCriarCampo={() => setCamposSubScreen('criar')}
+          onEditCampo={(campo) => {
+            setCampoEmEdicao(campo);
+            setCamposSubScreen('editar');
+          }}
+          onDeleteCampo={handleEliminarCampo}
         />
       );
     }
 
-    if (activeTab === 'parcelas') {
+    if (activeScreen === 'parcelas') {
       return (
         <ParcelasScreen
           campoFiltro={campoFiltroParcelas}
           onBackToCampo={() => {
             const campoAtual = campoFiltroParcelas;
             setCampoFiltroParcelas(null);
-            setActiveTab('campos');
+            setActiveScreen('campos');
             setSelectedCampo(campoAtual);
           }}
           onClearCampoFiltro={() => setCampoFiltroParcelas(null)}
@@ -136,7 +267,7 @@ export default function App() {
       );
     }
 
-    if (activeTab === 'plantacoes') {
+    if (activeScreen === 'plantacoes') {
       return (
         <PlantacoesScreen
           onSelectPlantacao={(plantacao) => {
@@ -147,20 +278,61 @@ export default function App() {
       );
     }
 
-    if (activeTab === 'perfil') {
-      if (subScreenPerfil === 'tarefas') {
+    if (activeScreen === 'tarefas') {
+      return (
+        <TarefasScreen
+          onSelectTarefa={(tarefa) => {
+            setSelectedTarefa(tarefa);
+          }}
+          onOpenCriarTarefa={() => {}}
+        />
+      );
+    }
+
+    if (activeScreen === 'perfil') {
+      if (perfilSubScreen === 'registar_operador') {
         return (
-          <TarefasScreen
-            onBack={() => setSubScreenPerfil(null)}
+          <RegistarOperadorScreen
+            quintaNome="Quinta do Vale"
+            perfilFixo="Operador"
+            onBack={() => setPerfilSubScreen('operadores')}
+            onRegistarOperador={handleAdicionarOperador}
           />
         );
       }
+
+      if (perfilSubScreen === 'operadores') {
+        return (
+          <OperadoresScreen
+            quintaNome="Quinta do Vale"
+            operadoresData={operadores}
+            convitesData={convites}
+            totalOperadoresCount={operadores.length}
+            totalConvitesCount={convites.length}
+            onBack={() => setPerfilSubScreen(null)}
+            onSelectOperador={(operador) => setSelectedOperador(operador)}
+            onOpenAdicionarOperador={() =>
+              setPerfilSubScreen('registar_operador')
+            }
+          />
+        );
+      }
+
       return (
         <PerfilScreen
-          onOpenTarefas={() => setSubScreenPerfil('tarefas')}
+          userName="Maria Costa"
+          roleText="Agricultora · Proprietária"
+          quintaNome="Quinta do Vale"
+          quintaDetalhe="Évora · 128,4 ha"
+          planoNome="Plano Profissional"
+          planoRenovacao="Renova a 14 out. 2026"
+          equipaResumo={totalUtilizadoresResumo}
+          onOpenOperadores={() => setPerfilSubScreen('operadores')}
           onLogout={() => {
-            limparSubEcransTab();
+            limparDetalhes();
             setCampoFiltroParcelas(null);
+            setActiveScreen('inicio');
+            setIsAuthenticated(false);
             setAuthScreen('login');
           }}
         />
@@ -177,8 +349,8 @@ export default function App() {
         {renderMainContent()}
       </View>
       <BottomNav
-        activeTab={activeTab}
-        onSelectTab={handleSelectTab}
+        activeTab={bottomNavActiveTab}
+        onSelectTab={(tab) => handleNavigate(tab)}
       />
     </SafeAreaView>
   );

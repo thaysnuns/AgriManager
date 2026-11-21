@@ -6,338 +6,351 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import AuthInput from './ui/AuthInput';
+import PrimaryButton from './ui/PrimaryButton';
 
-export default function RegistarOperadorScreen({ onBack, onOperadorRegistado }) {
+export default function RegistarOperadorScreen({
+  quintaNome = 'Quinta do Vale',
+  perfilFixo = 'Operador',
+  onBack,
+  onRegistarOperador,
+}) {
   const [nomeCompleto, setNomeCompleto] = useState('');
   const [email, setEmail] = useState('');
   const [palavraPasse, setPalavraPasse] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
-  const [erro, setErro] = useState('');
+  const [erroForm, setErroForm] = useState('');
 
   const handleSubmit = () => {
     const nomeLimpo = nomeCompleto.trim();
-    const emailLimpo = email.trim().toLowerCase();
-    const temLetra = /[A-Za-z]/.test(palavraPasse);
-    const temNumero = /\d/.test(palavraPasse);
+    const emailLimpo = email.trim();
+    const passLimpa = palavraPasse.trim();
 
-    if (!nomeLimpo || !emailLimpo || !palavraPasse) {
-      setErro('Preencha todos os campos obrigatórios.');
+    if (!nomeLimpo || !emailLimpo || !passLimpa) {
+      setErroForm('Preencha o nome completo, o e-mail e a palavra-passe.');
       return;
     }
 
-    if (!emailLimpo.includes('@') || !emailLimpo.includes('.')) {
-      setErro('Introduza um endereço de e-mail válido.');
+    if (passLimpa.length < 8) {
+      setErroForm('A palavra-passe deve ter pelo menos 8 caracteres.');
       return;
     }
 
-    if (palavraPasse.length < 8 || !temLetra || !temNumero) {
-      setErro('A palavra-passe deve ter pelo menos 8 caracteres, incluindo letras e números.');
-      return;
-    }
+    setErroForm('');
 
-    setErro('');
-    if (onOperadorRegistado) {
-      onOperadorRegistado({
+    if (onRegistarOperador) {
+      onRegistarOperador({
         nome: nomeLimpo,
         email: emailLimpo,
+        palavraPasse: passLimpa,
+        empresa: quintaNome,
+        perfil: perfilFixo,
+        estado: 'Ativo',
       });
     }
   };
 
   return (
     <ScrollView
+      style={styles.scrollView}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
+      {/* Cabeçalho */}
       <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          activeOpacity={0.8}
+          delayPressIn={0}
+          onPress={() => onBack && onBack()}
+        >
           <Ionicons name="arrow-back" size={20} color="#1E2923" />
         </TouchableOpacity>
-        <View>
+
+        <View style={styles.headerTextCol}>
           <Text style={styles.title}>Registar operador</Text>
           <Text style={styles.subtitle}>Perfil · Operadores</Text>
         </View>
       </View>
 
-      <Text style={styles.leadText}>Crie uma conta para um novo membro da sua equipa.</Text>
+      <Text style={styles.introText}>
+        Crie uma conta para um novo membro da sua equipa.
+      </Text>
 
-      <View style={styles.lockedCard}>
-        <View style={styles.lockedRow}>
-          <View style={styles.lockedIconBox}>
-            <MaterialCommunityIcons name="office-building-outline" size={20} color="#1B3B2B" />
+      {/* Bloco verde claro com empresa e perfil fixos */}
+      <View style={styles.lockedBox}>
+        <View style={[styles.lockedRow, styles.lockedRowBorder]}>
+          <View style={styles.lockedIconWrap}>
+            <Ionicons name="business-outline" size={20} color="#24593F" />
           </View>
           <View style={styles.lockedTextCol}>
-            <Text style={styles.lockedLabel}>Empresa associada automaticamente</Text>
-            <Text style={styles.lockedValue}>Quinta do Vale</Text>
+            <Text style={styles.lockedLabel}>
+              Empresa associada automaticamente
+            </Text>
+            <Text numberOfLines={1} style={styles.lockedValue}>
+              {quintaNome}
+            </Text>
           </View>
-          <Ionicons name="lock-closed-outline" size={18} color="#2D6A4F" />
+          <Ionicons name="lock-closed-outline" size={17} color="#6E8277" />
         </View>
 
-        <View style={styles.divider} />
-
         <View style={styles.lockedRow}>
-          <View style={styles.lockedIconBox}>
-            <Ionicons name="person-outline" size={20} color="#1B3B2B" />
+          <View style={styles.lockedIconWrap}>
+            <Ionicons name="person-outline" size={20} color="#24593F" />
           </View>
           <View style={styles.lockedTextCol}>
             <Text style={styles.lockedLabel}>Perfil de acesso fixo</Text>
-            <Text style={styles.lockedValue}>Operador</Text>
+            <Text numberOfLines={1} style={styles.lockedValue}>
+              {perfilFixo}
+            </Text>
           </View>
-          <Ionicons name="lock-closed-outline" size={18} color="#2D6A4F" />
+          <Ionicons name="lock-closed-outline" size={17} color="#6E8277" />
         </View>
       </View>
 
+      {/* Cabeçalho da secção de dados */}
       <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionTitle}>Dados do operador</Text>
-        <Text style={styles.requiredNote}>Todos obrigatórios</Text>
+        <Text style={styles.requiredHint}>Todos obrigatórios</Text>
       </View>
 
-      <Text style={styles.fieldLabel}>Nome completo</Text>
-      <View style={styles.inputBox}>
-        <Ionicons name="person-outline" size={19} color="#7C8A82" style={styles.inputIcon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Ana Martins"
-          placeholderTextColor="#8B9890"
-          value={nomeCompleto}
-          onChangeText={(t) => {
-            setNomeCompleto(t);
-            if (erro) setErro('');
-          }}
-        />
-      </View>
+      {/* Nome completo (AuthInput) */}
+      <Text style={styles.fieldTopLabel}>Nome completo</Text>
+      <AuthInput
+        iconName="person-outline"
+        iconLibrary="ion"
+        value={nomeCompleto}
+        onChangeText={(texto) => {
+          setNomeCompleto(texto);
+          if (erroForm) setErroForm('');
+        }}
+        placeholder="Ana Martins"
+        autoCapitalize="words"
+      />
 
-      <Text style={styles.fieldLabel}>E-mail</Text>
-      <View style={styles.inputBox}>
-        <Ionicons name="mail-outline" size={19} color="#7C8A82" style={styles.inputIcon} />
-        <TextInput
-          style={styles.input}
-          placeholder="ana.martins@email.pt"
-          placeholderTextColor="#8B9890"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={email}
-          onChangeText={(t) => {
-            setEmail(t);
-            if (erro) setErro('');
-          }}
-        />
-      </View>
+      {/* E-mail (AuthInput) */}
+      <Text style={styles.fieldTopLabel}>E-mail</Text>
+      <AuthInput
+        iconName="mail-outline"
+        iconLibrary="ion"
+        value={email}
+        onChangeText={(texto) => {
+          setEmail(texto);
+          if (erroForm) setErroForm('');
+        }}
+        placeholder="ana.martins@email.pt"
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
 
-      <Text style={styles.fieldLabel}>Palavra-passe</Text>
-      <View style={styles.inputBox}>
-        <Ionicons name="lock-closed-outline" size={19} color="#7C8A82" style={styles.inputIcon} />
-        <TextInput
-          style={styles.input}
-          placeholder="••••••••••••"
-          placeholderTextColor="#8B9890"
-          secureTextEntry={!mostrarPassword}
-          autoCapitalize="none"
-          value={palavraPasse}
-          onChangeText={(t) => {
-            setPalavraPasse(t);
-            if (erro) setErro('');
-          }}
-        />
+      {/* Palavra-passe (AuthInput + alternar visibilidade fora do input) */}
+      <Text style={styles.fieldTopLabel}>Palavra-passe</Text>
+      <View style={styles.passwordGroup}>
+        <View style={styles.passwordInputFlex}>
+          <AuthInput
+            iconName="lock-closed-outline"
+            iconLibrary="ion"
+            value={palavraPasse}
+            onChangeText={(texto) => {
+              setPalavraPasse(texto);
+              if (erroForm) setErroForm('');
+            }}
+            placeholder="••••••••••••"
+            secureTextEntry={!mostrarPassword}
+            autoCapitalize="none"
+          />
+        </View>
+
         <TouchableOpacity
+          style={styles.eyeBtn}
+          activeOpacity={0.8}
+          delayPressIn={0}
           onPress={() => setMostrarPassword((prev) => !prev)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons
             name={mostrarPassword ? 'eye-outline' : 'eye-off-outline'}
             size={20}
-            color="#7C8A82"
+            color="#7A8680"
           />
         </TouchableOpacity>
       </View>
-      <Text style={styles.helperText}>
+
+      <Text style={styles.passwordHint}>
         Use pelo menos 8 caracteres, incluindo letras e números.
       </Text>
 
       <View style={styles.permissionNoteRow}>
-        <Ionicons name="shield-checkmark-outline" size={18} color="#2D6A4F" style={styles.permIcon} />
+        <Ionicons
+          name="shield-checkmark-outline"
+          size={17}
+          color="#2D7A4F"
+          style={styles.permissionIcon}
+        />
         <Text style={styles.permissionNoteText}>
           Acesso às tarefas atribuídas, sem permissões de administração.
         </Text>
       </View>
 
-      {erro ? <Text style={styles.errorText}>{erro}</Text> : null}
+      {erroForm ? <Text style={styles.errorText}>{erroForm}</Text> : null}
 
-      <TouchableOpacity
-        style={styles.submitButton}
+      <PrimaryButton
+        title="Registar operador"
+        iconName="person-add-outline"
         onPress={handleSubmit}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="person-add-outline" size={20} color="#FFFFFF" />
-        <Text style={styles.submitButtonText}>Registar operador</Text>
-      </TouchableOpacity>
+      />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#F4F6F3',
+  },
   container: {
+    flexGrow: 1,
     padding: 20,
-    paddingTop: 16,
-    paddingBottom: 32,
+    paddingTop: 14,
+    paddingBottom: 28,
     backgroundColor: '#F4F6F3',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
     marginBottom: 14,
+    gap: 12,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E9E6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTextCol: {
+    flex: 1,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: '#1E2923',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#6B7871',
     marginTop: 2,
   },
-  leadText: {
-    fontSize: 14,
-    color: '#5F6D66',
-    marginBottom: 16,
-    lineHeight: 20,
+  introText: {
+    fontSize: 13.5,
+    color: '#5C6962',
+    marginBottom: 14,
   },
-  lockedCard: {
-    backgroundColor: '#E3ECE6',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 20,
+  lockedBox: {
+    backgroundColor: '#E1ECE4',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    marginBottom: 18,
     borderWidth: 1,
-    borderColor: '#D4E2D9',
+    borderColor: '#D0E0D5',
   },
   lockedRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 12,
   },
-  lockedIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: 'center',
+  lockedRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#CFE0D4',
+  },
+  lockedIconWrap: {
+    width: 32,
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   lockedTextCol: {
     flex: 1,
+    marginRight: 8,
   },
   lockedLabel: {
-    fontSize: 12,
-    color: '#5C6C64',
+    fontSize: 11.5,
+    color: '#5E7267',
   },
   lockedValue: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '800',
     color: '#1E2923',
-    marginTop: 2,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#CEE0D5',
-    marginVertical: 12,
+    marginTop: 1,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'baseline',
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 16.5,
     fontWeight: '800',
     color: '#1E2923',
   },
-  requiredNote: {
+  requiredHint: {
     fontSize: 12,
-    color: '#7C8A82',
+    color: '#6B7871',
   },
-  fieldLabel: {
+  fieldTopLabel: {
     fontSize: 13,
     fontWeight: '700',
     color: '#1E2923',
-    marginBottom: 7,
-    marginTop: 4,
+    marginBottom: 6,
   },
-  inputBox: {
+  passwordGroup: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  passwordInputFlex: {
+    flex: 1,
+  },
+  eyeBtn: {
+    width: 48,
+    height: 54,
     borderRadius: 16,
-    paddingHorizontal: 14,
-    height: 50,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E9E6',
-    marginBottom: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    color: '#1E2923',
-  },
-  helperText: {
+  passwordHint: {
     fontSize: 12,
-    color: '#7C8A82',
-    marginTop: -4,
-    marginBottom: 14,
+    color: '#6B7871',
+    marginTop: -2,
+    marginBottom: 12,
   },
   permissionNoteRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
-    marginBottom: 18,
-    paddingHorizontal: 2,
+    marginBottom: 16,
   },
-  permIcon: {
+  permissionIcon: {
+    marginRight: 8,
     marginTop: 1,
   },
   permissionNoteText: {
     flex: 1,
-    fontSize: 13,
-    color: '#5F6D66',
+    fontSize: 12.5,
+    color: '#5C6962',
     lineHeight: 18,
   },
   errorText: {
-    color: '#C2410C',
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: '700',
+    color: '#B85D19',
     marginBottom: 12,
-  },
-  submitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: '#244735',
-    borderRadius: 16,
-    paddingVertical: 15,
-  },
-  submitButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
   },
 });
