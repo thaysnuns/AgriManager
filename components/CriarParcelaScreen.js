@@ -1,238 +1,198 @@
-// components/CriarParcelaScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AuthInput from './ui/AuthInput';
+import PrimaryButton from './ui/PrimaryButton';
 
-const CAMPOS_OPCOES = [
-  'Vinha do Poente',
+const CAMPOS_OPCOES_DEFAULT = [
   'Olival Norte',
+  'Vinha do Poente',
   'Cereal Sul',
 ];
 
-const CULTURAS_VARIEDADES = [
+const OPCOES_CULTURA_PARCELA = [
   'Touriga Nacional',
   'Oliveira Galega',
-  'Trigo Mole',
-  'Aragonês',
-  'Cobrançosa',
+  'Olival Tradicional',
+  'Trigo duro',
+  'Cereal',
+  'Horta',
 ];
 
 export default function CriarParcelaScreen({
-  campoInicial,
-  camposDisponiveis = CAMPOS_OPCOES,
+  camposOpcoes = CAMPOS_OPCOES_DEFAULT,
+  campoInicial = '',
   onBack,
-  onParcelaCriada,
+  onCriarParcela,
 }) {
-  const campoDefault = campoInicial || camposDisponiveis[0] || 'Vinha do Poente';
+  const listaCampos =
+    Array.isArray(camposOpcoes) && camposOpcoes.length > 0
+      ? camposOpcoes
+      : CAMPOS_OPCOES_DEFAULT;
 
-  const [nomeParcela, setNomeParcela] = useState('');
-  const [campoCultivo, setCampoCultivo] = useState(campoDefault);
-  const [dropdownCampoAberto, setDropdownCampoAberto] = useState(false);
-  const [areaParcela, setAreaParcela] = useState('');
-  const [culturaVariedade, setCulturaVariedade] = useState('');
-  const [dropdownCulturaAberto, setDropdownCulturaAberto] = useState(false);
+  const [nome, setNome] = useState('');
+  const [campoNome, setCampoNome] = useState(
+    campoInicial || listaCampos[0] || ''
+  );
+  const [mostrarCampos, setMostrarCampos] = useState(false);
+  const [area, setArea] = useState('');
+  const [cultura, setCultura] = useState('');
+  const [mostrarCulturas, setMostrarCulturas] = useState(false);
   const [observacoes, setObservacoes] = useState('');
   const [erro, setErro] = useState('');
 
-  const handleCriar = () => {
-    const nomeLimpo = nomeParcela.trim();
-    const areaNormalizada = areaParcela.trim().replace(',', '.');
-    const areaNumero = parseFloat(areaNormalizada);
+  useEffect(() => {
+    if (campoInicial) {
+      setCampoNome(campoInicial);
+    } else if (listaCampos.length > 0 && !campoNome) {
+      setCampoNome(listaCampos[0]);
+    }
+  }, [campoInicial, listaCampos]);
 
-    if (!nomeLimpo) {
-      setErro('O nome da parcela é obrigatório.');
+  const handleGuardar = () => {
+    const nomeLimpo = nome.trim();
+    const campoLimpo = campoNome.trim();
+    const areaLimpa = area.trim();
+    const culturaLimpa = cultura.trim();
+    const obsLimpa = observacoes.trim();
+
+    if (!nomeLimpo || !campoLimpo || !areaLimpa) {
+      setErro(
+        'Preencha o nome da parcela (*), o campo de cultivo (*) e a área (*).'
+      );
       return;
     }
 
-    if (!campoCultivo) {
-      setErro('Selecione o campo de cultivo.');
+    const areaNumero = parseFloat(areaLimpa.replace(',', '.'));
+    if (Number.isNaN(areaNumero) || areaNumero <= 0) {
+      setErro('Insira uma área válida em hectares (ex.: 2,4).');
       return;
     }
-
-    if (!areaNormalizada || Number.isNaN(areaNumero) || areaNumero <= 0) {
-      setErro('Indique uma área válida em hectares (ha).');
-      return;
-    }
-
-    const prefixo = nomeLimpo
-      .replace(/[^A-Za-z0-9]/g, '')
-      .toUpperCase()
-      .slice(0, 4) || 'PARC';
-    const qrCode = `${prefixo}-2026`;
 
     setErro('');
-    if (onParcelaCriada) {
-      onParcelaCriada({
+
+    const sufixoAno = new Date().getFullYear();
+    const codigoCurto = nomeLimpo
+      .replace(/[^A-Za-z0-9]/g, '')
+      .toUpperCase()
+      .slice(0, 6) || 'PRC';
+    const qrCode = `${codigoCurto}-${sufixoAno}`;
+
+    if (onCriarParcela) {
+      onCriarParcela({
+        id: `parcela-${Date.now()}`,
         nome: nomeLimpo,
-        campo: campoCultivo,
+        campoNome: campoLimpo,
+        campo: campoLimpo,
         area: areaNumero,
-        areaFormatada: `${areaNumero.toLocaleString('pt-PT', {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        })} ha`,
-        cultura: culturaVariedade || '',
-        observacoes: observacoes.trim(),
+        cultura: culturaLimpa || 'Não definida',
+        observacoes: obsLimpa,
         qrCode,
+        estado: 'Saudável',
+        estadoDetalhe: 'NDVI 0,78',
+        alerta: false,
       });
     }
   };
 
   return (
     <ScrollView
+      style={styles.scrollView}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Cabeçalho */}
       <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          activeOpacity={0.8}
+          delayPressIn={0}
+          onPress={() => onBack && onBack()}
+        >
           <Ionicons name="arrow-back" size={20} color="#1E2923" />
         </TouchableOpacity>
-        <View>
+
+        <View style={styles.headerTextCol}>
           <Text style={styles.title}>Criar parcela</Text>
           <Text style={styles.subtitle}>Parcelas · Novo registo</Text>
         </View>
       </View>
 
-      {/* Secção: Dados da parcela */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Dados da parcela</Text>
-        <Text style={styles.requiredHint}>Preencha os dados. * Campos obrigatórios.</Text>
-      </View>
-
-      {/* Nome da parcela * */}
-      <Text style={styles.fieldLabel}>
-        Nome da parcela <Text style={styles.asterisk}>*</Text>
+      <Text style={styles.sectionTitle}>Dados da parcela</Text>
+      <Text style={styles.sectionHelper}>
+        Preencha os dados. * Campos obrigatórios.
       </Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Parcela VP-05"
-        placeholderTextColor="#8B9890"
-        value={nomeParcela}
+
+      <Text style={styles.label}>Nome da parcela *</Text>
+      <AuthInput
+        iconName="layers-outline"
+        iconLibrary="ion"
+        value={nome}
         onChangeText={(t) => {
-          setNomeParcela(t);
+          setNome(t);
           if (erro) setErro('');
         }}
+        placeholder="Ex.: Parcela VP-05"
+        autoCapitalize="words"
       />
 
-      {/* Campo de cultivo * */}
-      <Text style={styles.fieldLabel}>
-        Campo de cultivo <Text style={styles.asterisk}>*</Text>
-      </Text>
+      <Text style={styles.label}>Campo de cultivo *</Text>
       <TouchableOpacity
-        style={styles.selectBox}
+        style={styles.selectorCard}
+        activeOpacity={0.85}
+        delayPressIn={0}
         onPress={() => {
-          setDropdownCampoAberto((prev) => !prev);
-          setDropdownCulturaAberto(false);
+          setMostrarCampos((prev) => !prev);
+          setMostrarCulturas(false);
         }}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.selectText}>{campoCultivo}</Text>
-        <Ionicons
-          name={dropdownCampoAberto ? 'chevron-up' : 'chevron-down'}
-          size={19}
-          color="#6B7871"
-        />
-      </TouchableOpacity>
-
-      {dropdownCampoAberto && (
-        <View style={styles.dropdownList}>
-          {camposDisponiveis.map((item) => {
-            const selecionada = campoCultivo === item;
-            return (
-              <TouchableOpacity
-                key={item}
-                style={[styles.dropdownItem, selecionada && styles.dropdownItemActive]}
-                onPress={() => {
-                  setCampoCultivo(item);
-                  setDropdownCampoAberto(false);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.dropdownItemText,
-                    selecionada && styles.dropdownItemTextActive,
-                  ]}
-                >
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-
-      {/* Área da parcela * */}
-      <Text style={styles.fieldLabel}>
-        Área da parcela <Text style={styles.asterisk}>*</Text>
-      </Text>
-      <View style={styles.areaInputBox}>
-        <TextInput
-          style={styles.areaInput}
-          placeholder="2,4"
-          placeholderTextColor="#8B9890"
-          keyboardType="decimal-pad"
-          value={areaParcela}
-          onChangeText={(t) => {
-            setAreaParcela(t);
-            if (erro) setErro('');
-          }}
-        />
-        <Text style={styles.unitText}>ha</Text>
-      </View>
-
-      {/* Cultura / variedade (opcional) */}
-      <Text style={styles.fieldLabel}>Cultura / variedade (opcional)</Text>
-      <TouchableOpacity
-        style={styles.selectBox}
-        onPress={() => {
-          setDropdownCulturaAberto((prev) => !prev);
-          setDropdownCampoAberto(false);
-        }}
-        activeOpacity={0.8}
       >
         <Text
           style={[
-            styles.selectText,
-            !culturaVariedade && styles.placeholderText,
+            styles.selectorText,
+            !campoNome && styles.selectorPlaceholder,
           ]}
         >
-          {culturaVariedade || 'Touriga Nacional'}
+          {campoNome || 'Selecionar campo'}
         </Text>
         <Ionicons
-          name={dropdownCulturaAberto ? 'chevron-up' : 'chevron-down'}
-          size={19}
+          name={mostrarCampos ? 'chevron-up' : 'chevron-down'}
+          size={18}
           color="#6B7871"
         />
       </TouchableOpacity>
 
-      {dropdownCulturaAberto && (
-        <View style={styles.dropdownList}>
-          {CULTURAS_VARIEDADES.map((item) => {
-            const selecionada = culturaVariedade === item;
+      {mostrarCampos && (
+        <View style={styles.optionsBox}>
+          {listaCampos.map((itemCampo) => {
+            const selecionada = campoNome === itemCampo;
             return (
               <TouchableOpacity
-                key={item}
-                style={[styles.dropdownItem, selecionada && styles.dropdownItemActive]}
+                key={itemCampo}
+                style={[
+                  styles.optionChip,
+                  selecionada && styles.optionChipActive,
+                ]}
+                activeOpacity={0.8}
+                delayPressIn={0}
                 onPress={() => {
-                  setCulturaVariedade(item);
-                  setDropdownCulturaAberto(false);
+                  setCampoNome(itemCampo);
+                  setMostrarCampos(false);
+                  if (erro) setErro('');
                 }}
               >
                 <Text
                   style={[
-                    styles.dropdownItemText,
-                    selecionada && styles.dropdownItemTextActive,
+                    styles.optionChipText,
+                    selecionada && styles.optionChipTextActive,
                   ]}
                 >
-                  {item}
+                  {itemCampo}
                 </Text>
               </TouchableOpacity>
             );
@@ -240,263 +200,300 @@ export default function CriarParcelaScreen({
         </View>
       )}
 
-      {/* Observações (opcional) */}
-      <Text style={styles.fieldLabel}>Observações (opcional)</Text>
-      <TextInput
-        style={styles.textArea}
-        placeholder="Adicionar notas sobre a parcela..."
-        placeholderTextColor="#8B9890"
-        multiline
-        numberOfLines={4}
-        textAlignVertical="top"
+      <Text style={styles.label}>Área da parcela *</Text>
+      <View style={styles.areaRow}>
+        <View style={styles.areaInputFlex}>
+          <AuthInput
+            iconName="resize-outline"
+            iconLibrary="ion"
+            value={area}
+            onChangeText={(t) => {
+              setArea(t);
+              if (erro) setErro('');
+            }}
+            placeholder="0,0"
+            keyboardType="decimal-pad"
+            autoCapitalize="none"
+          />
+        </View>
+        <View style={styles.unitBox}>
+          <Text style={styles.unitText}>ha</Text>
+        </View>
+      </View>
+
+      <Text style={styles.label}>Cultura / variedade (opcional)</Text>
+      <TouchableOpacity
+        style={styles.selectorCard}
+        activeOpacity={0.85}
+        delayPressIn={0}
+        onPress={() => {
+          setMostrarCulturas((prev) => !prev);
+          setMostrarCampos(false);
+        }}
+      >
+        <Text
+          style={[
+            styles.selectorText,
+            !cultura && styles.selectorPlaceholder,
+          ]}
+        >
+          {cultura || 'Selecionar cultura ou variedade'}
+        </Text>
+        <Ionicons
+          name={mostrarCulturas ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color="#6B7871"
+        />
+      </TouchableOpacity>
+
+      {mostrarCulturas && (
+        <View style={styles.optionsBox}>
+          {OPCOES_CULTURA_PARCELA.map((opcao) => {
+            const selecionada = cultura === opcao;
+            return (
+              <TouchableOpacity
+                key={opcao}
+                style={[
+                  styles.optionChip,
+                  selecionada && styles.optionChipActive,
+                ]}
+                activeOpacity={0.8}
+                delayPressIn={0}
+                onPress={() => {
+                  setCultura(opcao);
+                  setMostrarCulturas(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.optionChipText,
+                    selecionada && styles.optionChipTextActive,
+                  ]}
+                >
+                  {opcao}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
+      <Text style={styles.label}>Observações (opcional)</Text>
+      <AuthInput
+        iconName="document-text-outline"
+        iconLibrary="ion"
         value={observacoes}
         onChangeText={setObservacoes}
+        placeholder="Adicionar notas sobre a parcela..."
+        autoCapitalize="sentences"
       />
 
-      {/* Cartão Informativo: QR code automático */}
-      <View style={styles.qrInfoCard}>
+      <View style={styles.infoBanner}>
         <MaterialCommunityIcons
-          name="qrcode-scan"
+          name="qrcode"
           size={22}
-          color="#3A5A48"
-          style={styles.qrIcon}
+          color="#24593F"
+          style={styles.infoIcon}
         />
-        <View style={styles.qrTextCol}>
-          <Text style={styles.qrTitle}>QR code automático</Text>
-          <Text style={styles.qrDesc}>
-            Ao criar a parcela, é gerado e associado um QR code único. Não precisa de introduzir um código.
+        <View style={styles.infoTextCol}>
+          <Text style={styles.infoTitle}>QR code automático</Text>
+          <Text style={styles.infoSub}>
+            Ao criar a parcela, é gerado e associado um QR code único. Não
+            precisa de introduzir um código.
           </Text>
         </View>
       </View>
 
       {erro ? <Text style={styles.errorText}>{erro}</Text> : null}
 
-      {/* Botão Primário: Criar parcela */}
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={handleCriar}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.primaryButtonText}>Criar parcela</Text>
-      </TouchableOpacity>
+      <PrimaryButton
+        title="Criar parcela"
+        showIcon={false}
+        onPress={handleGuardar}
+      />
 
-      {/* Botão Secundário: Cancelar */}
       <TouchableOpacity
-        style={styles.cancelButton}
-        onPress={onBack}
+        style={styles.cancelBtn}
         activeOpacity={0.85}
+        delayPressIn={0}
+        onPress={() => onBack && onBack()}
       >
-        <Text style={styles.cancelButtonText}>Cancelar</Text>
+        <Text style={styles.cancelText}>Cancelar</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#F4F6F3',
+  },
   container: {
+    flexGrow: 1,
     padding: 20,
-    paddingTop: 16,
-    paddingBottom: 32,
+    paddingTop: 14,
+    paddingBottom: 28,
     backgroundColor: '#F4F6F3',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    marginBottom: 18,
+    marginBottom: 16,
+    gap: 12,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E5ECE7',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
+  },
+  headerTextCol: {
+    flex: 1,
   },
   title: {
-    fontSize: 23,
+    fontSize: 21,
     fontWeight: '800',
     color: '#1E2923',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#6B7871',
     marginTop: 2,
   },
-  sectionHeaderRow: {
-    marginBottom: 14,
-  },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16.5,
     fontWeight: '800',
     color: '#1E2923',
   },
-  requiredHint: {
-    fontSize: 12,
-    color: '#7C8A82',
-    marginTop: 3,
+  sectionHelper: {
+    fontSize: 12.5,
+    color: '#6B7871',
+    marginTop: 2,
+    marginBottom: 14,
   },
-  fieldLabel: {
+  label: {
     fontSize: 13,
     fontWeight: '700',
     color: '#1E2923',
-    marginBottom: 7,
-    marginTop: 4,
+    marginBottom: 6,
   },
-  asterisk: {
-    color: '#2D6A4F',
-    fontWeight: '800',
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: 15,
-    height: 50,
-    fontSize: 14,
-    color: '#1E2923',
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-    marginBottom: 12,
-  },
-  areaInputBox: {
+  areaRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  areaInputFlex: {
+    flex: 1,
+  },
+  unitBox: {
+    height: 54,
+    paddingHorizontal: 14,
     borderRadius: 16,
-    paddingHorizontal: 15,
-    height: 50,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E9E6',
-    marginBottom: 12,
-  },
-  areaInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#1E2923',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   unitText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#7C8A82',
-    marginLeft: 8,
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#7A8680',
   },
-  selectBox: {
+  selectorCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    paddingHorizontal: 15,
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
-    marginBottom: 8,
-  },
-  selectText: {
-    fontSize: 14,
-    color: '#1E2923',
-  },
-  placeholderText: {
-    color: '#8B9890',
-  },
-  dropdownList: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    paddingHorizontal: 14,
+    height: 54,
     borderWidth: 1,
     borderColor: '#E5E9E6',
     marginBottom: 12,
-    overflow: 'hidden',
   },
-  dropdownItem: {
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F4F2',
-  },
-  dropdownItemActive: {
-    backgroundColor: '#E3ECE6',
-  },
-  dropdownItemText: {
+  selectorText: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#1E2923',
   },
-  dropdownItemTextActive: {
-    fontWeight: '700',
-    color: '#1B3B2B',
+  selectorPlaceholder: {
+    color: '#8B9890',
   },
-  textArea: {
-    backgroundColor: '#FFFFFF',
+  optionsBox: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  optionChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 16,
-    paddingHorizontal: 15,
-    paddingTop: 13,
-    paddingBottom: 13,
-    minHeight: 96,
-    fontSize: 14,
-    color: '#1E2923',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E9E6',
-    marginBottom: 14,
   },
-  qrInfoCard: {
+  optionChipActive: {
+    backgroundColor: '#1B3B2B',
+    borderColor: '#1B3B2B',
+  },
+  optionChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#244735',
+  },
+  optionChipTextActive: {
+    color: '#FFFFFF',
+  },
+  infoBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#E3ECE6',
+    backgroundColor: '#DCEAE0',
     borderRadius: 18,
-    padding: 15,
+    padding: 14,
+    marginTop: 4,
     marginBottom: 18,
-    borderWidth: 1,
-    borderColor: '#D4E2D9',
   },
-  qrIcon: {
-    marginRight: 12,
+  infoIcon: {
+    marginRight: 10,
     marginTop: 2,
   },
-  qrTextCol: {
+  infoTextCol: {
     flex: 1,
   },
-  qrTitle: {
-    fontSize: 14,
+  infoTitle: {
+    fontSize: 13.5,
     fontWeight: '800',
-    color: '#2D4739',
+    color: '#1E2923',
   },
-  qrDesc: {
+  infoSub: {
     fontSize: 12,
-    color: '#5C7265',
-    marginTop: 3,
+    color: '#4B5D53',
+    marginTop: 2,
     lineHeight: 17,
   },
   errorText: {
-    color: '#C2410C',
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: '700',
+    color: '#B85D19',
     marginBottom: 12,
   },
-  primaryButton: {
-    backgroundColor: '#244735',
-    borderRadius: 16,
-    paddingVertical: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  cancelButton: {
+  cancelBtn: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 10,
     borderWidth: 1,
     borderColor: '#E5E9E6',
   },
-  cancelButtonText: {
-    fontSize: 15,
+  cancelText: {
+    fontSize: 14.5,
     fontWeight: '700',
     color: '#1E2923',
   },

@@ -9,8 +9,13 @@ import CamposScreen, { CAMPOS_SCREEN_INICIAIS } from './components/CamposScreen'
 import CampoDetalheScreen from './components/CampoDetalheScreen';
 import CriarCamposScreen from './components/CriarCamposScreen';
 import EditarCamposScreen from './components/EditarCamposScreen';
+import EliminarCampoScreen from './components/EliminarCampoScreen';
 import ParcelasScreen from './components/ParcelasScreen';
 import ParcelaDetalheScreen from './components/ParcelaDetalheScreen';
+import CriarParcelaScreen from './components/CriarParcelaScreen';
+import EditarParcelaScreen from './components/EditarParcelaScreen';
+import EliminarParcelaScreen from './components/EliminarParcelaScreen';
+import ParcelaCriadaScreen from './components/ParcelaCriadaScreen';
 import PlantacoesScreen from './components/PlantacoesScreen';
 import TarefasScreen from './components/TarefasScreen';
 import PerfilScreen from './components/PerfilScreen';
@@ -38,6 +43,45 @@ const CONVITES_INICIAIS = [
   { id: 'cv-3', email: 'paulo.oliveira@quintadovale.pt', estado: 'Pendente' },
 ];
 
+const PARCELAS_INICIAIS = [
+  {
+    id: 'prc-1',
+    nome: 'Parcela ON-01',
+    campoNome: 'Olival Norte',
+    campo: 'Olival Norte',
+    area: 12.4,
+    cultura: 'Oliveira Galega',
+    qrCode: 'ON01-2026',
+    estado: 'Saudável',
+    estadoDetalhe: 'NDVI 0,83',
+    alerta: false,
+  },
+  {
+    id: 'prc-2',
+    nome: 'Parcela VP-03',
+    campoNome: 'Vinha do Poente',
+    campo: 'Vinha do Poente',
+    area: 6.2,
+    cultura: 'Touriga Nacional',
+    qrCode: 'VP03-2026',
+    estado: 'Atenção',
+    estadoDetalhe: 'Humidade baixa',
+    alerta: true,
+  },
+  {
+    id: 'prc-3',
+    nome: 'Parcela CS-01',
+    campoNome: 'Cereal Sul',
+    campo: 'Cereal Sul',
+    area: 15.8,
+    cultura: 'Trigo duro',
+    qrCode: 'CS01-2026',
+    estado: 'Saudável',
+    estadoDetalhe: 'NDVI 0,76',
+    alerta: false,
+  },
+];
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [authScreen, setAuthScreen] = useState('login');
@@ -46,8 +90,14 @@ export default function App() {
   const [campos, setCampos] = useState(CAMPOS_SCREEN_INICIAIS);
   const [camposSubScreen, setCamposSubScreen] = useState(null);
   const [campoEmEdicao, setCampoEmEdicao] = useState(null);
+  const [campoEmEliminacao, setCampoEmEliminacao] = useState(null);
   const [selectedCampo, setSelectedCampo] = useState(null);
 
+  const [parcelas, setParcelas] = useState(PARCELAS_INICIAIS);
+  const [parcelasSubScreen, setParcelasSubScreen] = useState(null);
+  const [parcelaEmEdicao, setParcelaEmEdicao] = useState(null);
+  const [parcelaEmEliminacao, setParcelaEmEliminacao] = useState(null);
+  const [parcelaRecemCriada, setParcelaRecemCriada] = useState(null);
   const [campoFiltroParcelas, setCampoFiltroParcelas] = useState(null);
   const [selectedParcela, setSelectedParcela] = useState(null);
   const [selectedPlantacao, setSelectedPlantacao] = useState(null);
@@ -66,6 +116,11 @@ export default function App() {
     setSelectedOperador(null);
     setCamposSubScreen(null);
     setCampoEmEdicao(null);
+    setCampoEmEliminacao(null);
+    setParcelasSubScreen(null);
+    setParcelaEmEdicao(null);
+    setParcelaEmEliminacao(null);
+    setParcelaRecemCriada(null);
     setPerfilSubScreen(null);
   };
 
@@ -94,6 +149,55 @@ export default function App() {
     if (selectedCampo?.id === campoAlvo.id) {
       setSelectedCampo(null);
     }
+  };
+
+  const handleCriarParcela = (novaParcela) => {
+    setParcelas((prev) => [novaParcela, ...prev]);
+    const nomeCampoAlvo = novaParcela.campoNome || novaParcela.campo;
+    if (nomeCampoAlvo) {
+      setCampos((prev) =>
+        prev.map((c) =>
+          c.nome === nomeCampoAlvo
+            ? { ...c, parcelasCount: (c.parcelasCount ?? 0) + 1 }
+            : c
+        )
+      );
+    }
+    setParcelaRecemCriada(novaParcela);
+    setParcelasSubScreen('criada');
+  };
+
+  const handleGuardarParcelaEditada = (parcelaAtualizada) => {
+    setParcelas((prev) =>
+      prev.map((item) =>
+        item.id === parcelaAtualizada.id ? parcelaAtualizada : item
+      )
+    );
+    if (selectedParcela?.id === parcelaAtualizada.id) {
+      setSelectedParcela(parcelaAtualizada);
+    }
+    setParcelaEmEdicao(null);
+    setParcelasSubScreen(null);
+  };
+
+  const handleConfirmarEliminarParcela = (parcelaAlvo) => {
+    if (!parcelaAlvo?.id) return;
+    const nomeCampoAlvo = parcelaAlvo.campoNome || parcelaAlvo.campo;
+    setParcelas((prev) => prev.filter((item) => item.id !== parcelaAlvo.id));
+    if (nomeCampoAlvo) {
+      setCampos((prev) =>
+        prev.map((c) =>
+          c.nome === nomeCampoAlvo
+            ? { ...c, parcelasCount: Math.max(0, (c.parcelasCount ?? 0) - 1) }
+            : c
+        )
+      );
+    }
+    if (selectedParcela?.id === parcelaAlvo.id) {
+      setSelectedParcela(null);
+    }
+    setParcelaEmEliminacao(null);
+    setParcelasSubScreen(null);
   };
 
   if (!isAuthenticated) {
@@ -133,10 +237,13 @@ export default function App() {
   const bottomNavActiveTab =
     activeScreen === 'tarefas' ? 'inicio' : activeScreen;
 
+  const nomesCamposDisponiveis = campos.map((c) => c.nome).filter(Boolean);
+
   const totalUtilizadoresResumo =
     operadores.length + convites.length === 14 && operadores.length === 11
       ? '12 utilizadores · 3 convites'
       : `${operadores.length} operadores · ${convites.length} convites`;
+
   const renderMainContent = () => {
     if (selectedParcela) {
       return (
@@ -181,8 +288,6 @@ export default function App() {
                 estadoTitulo: 'Saudável',
                 detalheEstado: 'NDVI 0,78',
                 alerta: false,
-                iconBg: '#E1ECE4',
-                iconColor: '#2A6F4E',
                 parcelasCount: novoCampo.parcelasCount ?? 0,
                 zona: novoCampo.zona || novoCampo.localizacao || 'Exploração',
                 localizacao: novoCampo.localizacao || '',
@@ -219,6 +324,23 @@ export default function App() {
         );
       }
 
+      if (camposSubScreen === 'eliminar' && campoEmEliminacao) {
+        return (
+          <EliminarCampoScreen
+            campo={campoEmEliminacao}
+            onCancel={() => {
+              setCampoEmEliminacao(null);
+              setCamposSubScreen(null);
+            }}
+            onConfirmDelete={(campoAlvo) => {
+              handleEliminarCampo(campoAlvo);
+              setCampoEmEliminacao(null);
+              setCamposSubScreen(null);
+            }}
+          />
+        );
+      }
+
       if (selectedCampo) {
         return (
           <CampoDetalheScreen
@@ -232,7 +354,6 @@ export default function App() {
           />
         );
       }
-
       return (
         <CamposScreen
           camposData={campos}
@@ -242,14 +363,73 @@ export default function App() {
             setCampoEmEdicao(campo);
             setCamposSubScreen('editar');
           }}
-          onDeleteCampo={handleEliminarCampo}
+          onDeleteCampo={(campo) => {
+            setCampoEmEliminacao(campo);
+            setCamposSubScreen('eliminar');
+          }}
         />
       );
     }
 
     if (activeScreen === 'parcelas') {
+      if (parcelasSubScreen === 'criar') {
+        return (
+          <CriarParcelaScreen
+            camposOpcoes={nomesCamposDisponiveis}
+            campoInicial={campoFiltroParcelas?.nome || ''}
+            onBack={() => setParcelasSubScreen(null)}
+            onCriarParcela={handleCriarParcela}
+          />
+        );
+      }
+
+      if (parcelasSubScreen === 'criada' && parcelaRecemCriada) {
+        return (
+          <ParcelaCriadaScreen
+            parcela={parcelaRecemCriada}
+            onVerDetalhes={(parcelaCriada) => {
+              setParcelaRecemCriada(null);
+              setParcelasSubScreen(null);
+              setSelectedParcela(parcelaCriada);
+            }}
+            onVoltarParcelas={() => {
+              setParcelaRecemCriada(null);
+              setParcelasSubScreen(null);
+            }}
+          />
+        );
+      }
+
+      if (parcelasSubScreen === 'editar' && parcelaEmEdicao) {
+        return (
+          <EditarParcelaScreen
+            parcela={parcelaEmEdicao}
+            camposOpcoes={nomesCamposDisponiveis}
+            onBack={() => {
+              setParcelaEmEdicao(null);
+              setParcelasSubScreen(null);
+            }}
+            onGuardarAlteracoes={handleGuardarParcelaEditada}
+          />
+        );
+      }
+
+      if (parcelasSubScreen === 'eliminar' && parcelaEmEliminacao) {
+        return (
+          <EliminarParcelaScreen
+            parcela={parcelaEmEliminacao}
+            onCancel={() => {
+              setParcelaEmEliminacao(null);
+              setParcelasSubScreen(null);
+            }}
+            onConfirmDelete={handleConfirmarEliminarParcela}
+          />
+        );
+      }
+
       return (
         <ParcelasScreen
+          parcelasData={parcelas}
           campoFiltro={campoFiltroParcelas}
           onBackToCampo={() => {
             const campoAtual = campoFiltroParcelas;
@@ -259,9 +439,15 @@ export default function App() {
           }}
           onClearCampoFiltro={() => setCampoFiltroParcelas(null)}
           onSelectParcela={(parcela) => setSelectedParcela(parcela)}
-          onOpenCriarParcela={() => {}}
-          onEditParcela={(parcela) => setSelectedParcela(parcela)}
-          onDeleteParcela={() => {}}
+          onOpenCriarParcela={() => setParcelasSubScreen('criar')}
+          onEditParcela={(parcela) => {
+            setParcelaEmEdicao(parcela);
+            setParcelasSubScreen('editar');
+          }}
+          onDeleteParcela={(parcela) => {
+            setParcelaEmEliminacao(parcela);
+            setParcelasSubScreen('eliminar');
+          }}
           onQrParcela={(parcela) => setSelectedParcela(parcela)}
         />
       );
