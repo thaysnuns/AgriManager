@@ -129,6 +129,12 @@ export default function CamposScreen({
     setCampos((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const handleSelecionarCampo = (campo) => {
+    if (typeof onSelectCampo === 'function') {
+      onSelectCampo(campo);
+    }
+  };
+
   const camposFiltrados = useMemo(() => {
     const termo = pesquisa.trim().toLowerCase();
     const lista = campos.filter((c) => {
@@ -194,6 +200,7 @@ export default function CamposScreen({
           style={styles.addBtn}
           onPress={() => onOpenCriarCampo && onOpenCriarCampo()}
           activeOpacity={0.8}
+          delayPressIn={0}
         >
           <Ionicons name="add" size={24} color="#1E2923" />
         </TouchableOpacity>
@@ -223,22 +230,32 @@ export default function CamposScreen({
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.locateBtn} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.locateBtn}
+            activeOpacity={0.85}
+            delayPressIn={0}
+          >
             <Ionicons name="locate-outline" size={20} color="#1B3B2B" />
           </TouchableOpacity>
         </ImageBackground>
       </View>
 
       {/* Chips de Filtro */}
-      <FilterChips items={chips} activeKey={filtro} onSelect={setFiltro} />
+      <FilterChips
+        items={chips}
+        activeKey={filtro}
+        onSelect={setFiltro}
+        style={styles.chipsSpacing}
+      />
 
       {/* Lista de Campos (sem TouchableOpacity aninhado) */}
       {camposFiltrados.map((campo) => (
         <View key={campo.id} style={styles.campoCard}>
           <TouchableOpacity
             style={styles.cardMainArea}
-            activeOpacity={0.8}
-            onPress={() => onSelectCampo && onSelectCampo(campo)}
+            activeOpacity={0.75}
+            delayPressIn={0}
+            onPress={() => handleSelecionarCampo(campo)}
           >
             <View style={[styles.iconBox, { backgroundColor: campo.iconBg }]}>
               <Ionicons name={campo.iconName} size={22} color={campo.iconColor} />
@@ -261,6 +278,7 @@ export default function CamposScreen({
             <TouchableOpacity
               style={styles.editBtn}
               activeOpacity={0.8}
+              delayPressIn={0}
               onPress={() => onEditCampo && onEditCampo(campo)}
             >
               <Ionicons name="pencil" size={14} color="#244735" />
@@ -269,6 +287,7 @@ export default function CamposScreen({
             <TouchableOpacity
               style={styles.deleteBtn}
               activeOpacity={0.8}
+              delayPressIn={0}
               onPress={() => handleApagarCampo(campo.id)}
             >
               <Ionicons name="trash-outline" size={14} color="#C26D1F" />
@@ -361,6 +380,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'flex-end',
+  },
+  chipsSpacing: {
+    marginBottom: 10,
   },
   campoCard: {
     flexDirection: 'row',

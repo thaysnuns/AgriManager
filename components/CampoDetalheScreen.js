@@ -1,5 +1,5 @@
 // components/CampoDetalheScreen.js
-import React, { useState } from 'react';
+import React from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,236 +9,280 @@ import {
   ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ParcelasScreen from './ParcelasScreen';
+import StatCard from './ui/StatCard';
+import SectionHeader from './ui/SectionHeader';
+
+const PARCELAS_POR_CAMPO = {
+  '1': [
+    {
+      id: 'p-1',
+      codigo: 'ON-01',
+      campo: 'Olival Norte',
+      nome: 'Parcela ON-01',
+      detalhe: '12,4 ha · oliveiras 8 anos',
+      estado: 'SEM ALERTAS',
+      estadoColor: '#2D6A4F',
+      iconBg: '#DCE7DF',
+      iconColor: '#2D6A4F',
+    },
+    {
+      id: 'p-2',
+      codigo: 'ON-02',
+      campo: 'Olival Norte',
+      nome: 'Parcela ON-02',
+      detalhe: '10,8 ha · próxima rega amanhã',
+      estado: 'PLANEADA',
+      estadoColor: '#2B6CB0',
+      iconBg: '#DCEAF7',
+      iconColor: '#2B6CB0',
+    },
+  ],
+  '2': [
+    {
+      id: 'p-3',
+      codigo: 'VP-03',
+      campo: 'Vinha do Poente',
+      nome: 'Parcela VP-03',
+      detalhe: '6,2 ha · Touriga Nacional',
+      estado: 'REGA HOJE',
+      estadoColor: '#C26D1F',
+      iconBg: '#F6E8D8',
+      iconColor: '#C26D1F',
+    },
+    {
+      id: 'p-4',
+      codigo: 'VP-01',
+      campo: 'Vinha do Poente',
+      nome: 'Parcela VP-01',
+      detalhe: '7,4 ha · Aragonez',
+      estado: 'SEM ALERTAS',
+      estadoColor: '#2D6A4F',
+      iconBg: '#DCE7DF',
+      iconColor: '#2D6A4F',
+    },
+  ],
+  '3': [
+    {
+      id: 'p-5',
+      codigo: 'CS-01',
+      campo: 'Cereal Sul',
+      nome: 'Parcela CS-01',
+      detalhe: '16,0 ha · Trigo duro',
+      estado: 'SEM ALERTAS',
+      estadoColor: '#2D6A4F',
+      iconBg: '#DCE7DF',
+      iconColor: '#2D6A4F',
+    },
+    {
+      id: 'p-6',
+      codigo: 'CS-02',
+      campo: 'Cereal Sul',
+      nome: 'Parcela CS-02',
+      detalhe: '15,2 ha · Cevada dística',
+      estado: 'PLANEADA',
+      estadoColor: '#2B6CB0',
+      iconBg: '#DCEAF7',
+      iconColor: '#2B6CB0',
+    },
+  ],
+};
 
 export default function CampoDetalheScreen({
   campo,
   onBack,
-  onOpenCriarParcela,
-  onEditParcela,
-  novaParcela,
-  parcelaEditada,
+  onEditCampo,
+  onDeleteCampo,
+  onVerTodasParcelas,
+  onSelectParcela,
 }) {
-  const [showParcelas, setShowParcelas] = useState(false);
+  const campoAtual = campo || {
+    id: '1',
+    nome: 'Olival Norte',
+    area: 42.8,
+    parcelasCount: 4,
+    cultura: 'Oliveira Galega',
+    estado: 'Saudável',
+  };
 
-  // Se clicou numa parcela ou em "Ver 4", abre o ecrã Parcelas
-  if (showParcelas) {
-    return (
-      <ParcelasScreen
-        campo={campo}
-        onBack={() => setShowParcelas(false)}
-        onOpenCriarParcela={onOpenCriarParcela}
-        onEditParcela={onEditParcela}
-        novaParcela={novaParcela}
-        parcelaEditada={parcelaEditada}
-      />
-    );
-  }
+  const areaFmt =
+    campoAtual.areaFormatada ||
+    `${Number(campoAtual.area || 42.8).toLocaleString('pt-PT', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    })} ha`;
 
-  const isOlival = !campo || campo.nome === 'Olival Norte';
-  const isVinha = campo?.nome === 'Vinha do Poente';
+  const parcelasCount = campoAtual.parcelasCount || 4;
+  const cultura = campoAtual.cultura || 'Oliveira Galega';
+  const estado = campoAtual.estado || 'Saudável';
+  const isAtencao = estado === 'Atenção';
 
-  const titulo = campo?.nome || 'Olival Norte';
-  const area = isOlival ? '42,8 ha' : isVinha ? '18,6 ha' : '31,2 ha';
-  const estado = campo?.estado || 'Saudável';
-  const parcelasLabel = isOlival ? '4 parcelas' : isVinha ? '3 parcelas' : '2 parcelas';
-  const cultura = isOlival ? 'Oliveira Galega' : isVinha ? 'Touriga Nacional' : 'Trigo Mole';
-  const humidade = isOlival ? '64%' : isVinha ? '38%' : '59%';
-  const humidadeNota = isOlival ? 'Ideal' : isVinha ? 'Baixa' : 'Ideal';
-  const vigor = isOlival ? '0,82' : isVinha ? '0,61' : '0,76';
-  const vigorNota = isOlival ? '+4% / 7 dias' : isVinha ? '-3% / 7 dias' : '+2% / 7 dias';
-  const verTotal = isOlival ? 'Ver 4' : isVinha ? 'Ver 3' : 'Ver 2';
-
-  const parcelas = isOlival
-    ? [
-        {
-          id: '1',
-          nome: 'Parcela ON-01',
-          subtitulo: '12,4 ha · oliveiras 8 anos',
-          badge: 'SEM ALERTAS',
-          badgeColor: '#2D6A4F',
-          iconBg: '#E3ECE6',
-          iconColor: '#1B3B2B',
-        },
-        {
-          id: '2',
-          nome: 'Parcela ON-02',
-          subtitulo: '10,8 ha · próxima rega amanhã',
-          badge: 'PLANEADA',
-          badgeColor: '#2B6CB0',
-          iconBg: '#E2ECF5',
-          iconColor: '#2B6CB0',
-        },
-      ]
-    : isVinha
-    ? [
-        {
-          id: '1',
-          nome: 'Parcela VP-01',
-          subtitulo: '6,4 ha · vinha velha',
-          badge: 'REGA URGENTE',
-          badgeColor: '#C26D1F',
-          iconBg: '#F6E8D8',
-          iconColor: '#C26D1F',
-        },
-        {
-          id: '2',
-          nome: 'Parcela VP-02',
-          subtitulo: '6,2 ha · próxima rega hoje',
-          badge: 'PLANEADA',
-          badgeColor: '#2B6CB0',
-          iconBg: '#E2ECF5',
-          iconColor: '#2B6CB0',
-        },
-      ]
-    : [
-        {
-          id: '1',
-          nome: 'Parcela CS-01',
-          subtitulo: '16,0 ha · sequeiro',
-          badge: 'SEM ALERTAS',
-          badgeColor: '#2D6A4F',
-          iconBg: '#E3ECE6',
-          iconColor: '#1B3B2B',
-        },
-        {
-          id: '2',
-          nome: 'Parcela CS-02',
-          subtitulo: '15,2 ha · monitorização ativa',
-          badge: 'SEM ALERTAS',
-          badgeColor: '#2D6A4F',
-          iconBg: '#E3ECE6',
-          iconColor: '#1B3B2B',
-        },
-      ];
+  const parcelasVisiveis =
+    PARCELAS_POR_CAMPO[campoAtual.id] || PARCELAS_POR_CAMPO['1'];
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Cabeçalho */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Cabeçalho Superior: Voltar + Título + Ações */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => onBack && onBack()}
+          activeOpacity={0.8}
+          delayPressIn={0}
+        >
           <Ionicons name="arrow-back" size={20} color="#1E2923" />
         </TouchableOpacity>
 
-        <View style={styles.headerTitleBox}>
-          <Text style={styles.title}>{titulo}</Text>
+        <View style={styles.headerCenter}>
+          <Text numberOfLines={1} style={styles.title}>
+            {campoAtual.nome}
+          </Text>
           <Text style={styles.subtitle}>Campo · atualizado há 12 min</Text>
         </View>
 
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.circleBtn}>
-            <Ionicons name="ellipsis-horizontal" size={18} color="#1E2923" />
+        <View style={styles.topActions}>
+          <TouchableOpacity
+            style={styles.moreBtn}
+            onPress={() => onEditCampo && onEditCampo(campoAtual)}
+            activeOpacity={0.8}
+            delayPressIn={0}
+          >
+            <Ionicons name="ellipsis-horizontal" size={18} color="#244735" />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.circleBtn, styles.circleBtnDanger]}>
+
+          <TouchableOpacity
+            style={styles.dangerBtn}
+            onPress={() => onDeleteCampo && onDeleteCampo(campoAtual.id)}
+            activeOpacity={0.8}
+            delayPressIn={0}
+          >
             <Ionicons name="ellipsis-horizontal" size={18} color="#C26D1F" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Imagem aérea */}
-      <View style={styles.mapCardWrapper}>
+      {/* Vista Aérea / Mapa do Campo */}
+      <View style={styles.mapWrapper}>
         <ImageBackground
           source={{
             uri: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80',
           }}
           style={styles.mapImage}
-          imageStyle={{ borderRadius: 18 }}
+          imageStyle={styles.mapImageRadius}
         >
           <View style={styles.mapBadge}>
-            <View style={styles.greenDot} />
-            <Text style={styles.mapBadgeText}>{area} · perímetro validado</Text>
+            <View
+              style={[
+                styles.statusDot,
+                isAtencao && { backgroundColor: '#C26D1F' },
+              ]}
+            />
+            <Text style={styles.mapBadgeText}>
+              {areaFmt} · perímetro validado
+            </Text>
           </View>
 
-          <TouchableOpacity style={styles.locateButton}>
+          <TouchableOpacity
+            style={styles.locateBtn}
+            activeOpacity={0.85}
+            delayPressIn={0}
+          >
             <Ionicons name="locate-outline" size={20} color="#1B3B2B" />
           </TouchableOpacity>
         </ImageBackground>
       </View>
 
-      {/* Etiquetas */}
-      <View style={styles.tagsRow}>
+      {/* Badges de Estado, Parcelas e Cultura */}
+      <View style={styles.badgesRow}>
         <View
           style={[
-            styles.tagPill,
-            isVinha ? styles.tagPillWarning : styles.tagPillSuccess,
+            styles.estadoBadge,
+            isAtencao && styles.estadoBadgeAtencao,
           ]}
         >
           <View
             style={[
-              styles.tagDot,
-              { backgroundColor: isVinha ? '#C26D1F' : '#2D6A4F' },
+              styles.smallDot,
+              { backgroundColor: isAtencao ? '#C26D1F' : '#2D6A4F' },
             ]}
           />
           <Text
             style={[
-              styles.tagTextBold,
-              { color: isVinha ? '#C26D1F' : '#2D6A4F' },
+              styles.estadoBadgeText,
+              isAtencao && { color: '#C26D1F' },
             ]}
           >
             {estado}
           </Text>
         </View>
 
-        <View style={styles.tagPillNeutral}>
-          <Text style={styles.tagTextNeutral}>{parcelasLabel}</Text>
+        <View style={styles.infoBadge}>
+          <Text style={styles.infoBadgeText}>{parcelasCount} parcelas</Text>
         </View>
 
-        <View style={styles.tagPillNeutral}>
-          <Text style={styles.tagTextNeutral}>{cultura}</Text>
-        </View>
-      </View>
-
-      {/* Métricas */}
-      <View style={styles.metricsRow}>
-        <View style={styles.metricCard}>
-          <View style={[styles.metricIconBox, { backgroundColor: '#E2ECF5' }]}>
-            <Ionicons name="water-outline" size={20} color="#2B6CB0" />
-          </View>
-          <Text style={styles.metricValue}>{humidade}</Text>
-          <Text style={styles.metricLabel}>Humidade</Text>
-          <Text style={[styles.metricNote, { color: isVinha ? '#C26D1F' : '#2B6CB0' }]}>
-            {humidadeNota}
-          </Text>
-        </View>
-
-        <View style={styles.metricCard}>
-          <View style={[styles.metricIconBox, { backgroundColor: '#E3ECE6' }]}>
-            <Ionicons name="pulse-outline" size={20} color="#1B3B2B" />
-          </View>
-          <Text style={styles.metricValue}>{vigor}</Text>
-          <Text style={styles.metricLabel}>Vigor médio</Text>
-          <Text style={[styles.metricNote, { color: isVinha ? '#C26D1F' : '#2D6A4F' }]}>
-            {vigorNota}
-          </Text>
+        <View style={styles.infoBadge}>
+          <Text style={styles.infoBadgeText}>{cultura}</Text>
         </View>
       </View>
 
-      {/* Secção: Parcelas (Clicáveis) */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Parcelas</Text>
-        <TouchableOpacity onPress={() => setShowParcelas(true)}>
-          <Text style={styles.seeAllLink}>{verTotal}</Text>
-        </TouchableOpacity>
+      {/* Métricas Reutilizando StatCard */}
+      <View style={styles.statsRow}>
+        <StatCard
+          iconName="water-outline"
+          iconColor="#2B6CB0"
+          iconBg="#DCEAF7"
+          value={isAtencao ? '41%' : '64%'}
+          label="Humidade"
+          note={isAtencao ? 'Abaixo do ideal' : 'Ideal'}
+          noteColor={isAtencao ? '#C26D1F' : '#2B6CB0'}
+        />
+
+        <StatCard
+          iconName="pulse-outline"
+          iconColor="#2D6A4F"
+          iconBg="#DCE7DF"
+          value={isAtencao ? '0,68' : '0,82'}
+          label="Vigor médio"
+          note={isAtencao ? '-2% / 7 dias' : '+4% / 7 dias'}
+          noteColor={isAtencao ? '#C26D1F' : '#2D6A4F'}
+        />
       </View>
 
-      {parcelas.map((item) => (
+      {/* Secção Parcelas Reutilizando SectionHeader */}
+      <SectionHeader
+        title="Parcelas"
+        actionLabel={`Ver ${parcelasCount}`}
+        onActionPress={() =>
+          onVerTodasParcelas && onVerTodasParcelas(campoAtual)
+        }
+      />
+
+      {parcelasVisiveis.map((parcela) => (
         <TouchableOpacity
-          key={item.id}
+          key={parcela.id}
           style={styles.parcelaCard}
-          activeOpacity={0.8}
-          onPress={() => setShowParcelas(true)}
+          activeOpacity={0.85}
+          delayPressIn={0}
+          onPress={() => onSelectParcela && onSelectParcela(parcela)}
         >
-          <View style={[styles.parcelaIconBox, { backgroundColor: item.iconBg }]}>
-            <Ionicons name="layers-outline" size={22} color={item.iconColor} />
+          <View style={[styles.parcelaIconBox, { backgroundColor: parcela.iconBg }]}>
+            <Ionicons
+              name="layers-outline"
+              size={20}
+              color={parcela.iconColor}
+            />
           </View>
 
           <View style={styles.parcelaInfo}>
-            <Text style={styles.parcelaNome}>{item.nome}</Text>
-            <Text style={styles.parcelaSub}>{item.subtitulo}</Text>
+            <Text style={styles.parcelaNome}>{parcela.nome}</Text>
+            <Text style={styles.parcelaDetalhe}>{parcela.detalhe}</Text>
           </View>
 
-          <Text style={[styles.parcelaBadge, { color: item.badgeColor }]}>
-            {item.badge}
+          <Text style={[styles.parcelaStatus, { color: parcela.estadoColor }]}>
+            {parcela.estado}
           </Text>
         </TouchableOpacity>
       ))}
@@ -247,27 +291,34 @@ export default function CampoDetalheScreen({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingTop: 16,
-    paddingBottom: 30,
+  scrollView: {
+    flex: 1,
     backgroundColor: '#F4F6F3',
   },
-  headerRow: {
+  container: {
+    flexGrow: 1,
+    padding: 20,
+    paddingTop: 14,
+    paddingBottom: 28,
+    backgroundColor: '#F4F6F3',
+  },
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 14,
+    gap: 10,
   },
   backBtn: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#E8ECE7',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
   },
-  headerTitleBox: {
+  headerCenter: {
     flex: 1,
   },
   title: {
@@ -278,13 +329,13 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 12,
     color: '#6B7871',
-    marginTop: 2,
+    marginTop: 1,
   },
-  headerActions: {
+  topActions: {
     flexDirection: 'row',
     gap: 8,
   },
-  circleBtn: {
+  moreBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -294,174 +345,117 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E9E6',
   },
-  circleBtnDanger: {
-    backgroundColor: '#FAF0EA',
-    borderColor: '#F3D6C6',
+  dangerBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F6E8D8',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  mapCardWrapper: {
-    marginBottom: 16,
-    borderRadius: 18,
+  mapWrapper: {
+    borderRadius: 20,
     overflow: 'hidden',
+    marginBottom: 12,
   },
   mapImage: {
-    height: 180,
+    height: 185,
     width: '100%',
     justifyContent: 'space-between',
     padding: 12,
   },
+  mapImageRadius: {
+    borderRadius: 20,
+  },
   mapBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    alignSelf: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
-  greenDot: {
+  statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#2D6A4F',
-    marginRight: 6,
+    marginRight: 7,
   },
   mapBadgeText: {
     fontSize: 12,
     fontWeight: '700',
     color: '#1E2923',
   },
-  locateButton: {
-    width: 38,
-    height: 38,
+  locateBtn: {
+    width: 40,
+    height: 40,
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'flex-end',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
-  tagsRow: {
+  badgesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 18,
+    marginBottom: 14,
   },
-  tagPill: {
+  estadoBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  tagPillSuccess: {
     backgroundColor: '#DCE7DF',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 18,
+    gap: 6,
   },
-  tagPillWarning: {
+  estadoBadgeAtencao: {
     backgroundColor: '#F6E8D8',
   },
-  tagDot: {
+  smallDot: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    marginRight: 6,
   },
-  tagTextBold: {
+  estadoBadgeText: {
     fontSize: 12,
     fontWeight: '700',
+    color: '#2D6A4F',
   },
-  tagPillNeutral: {
+  infoBadge: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingVertical: 7,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: '#E5E9E6',
   },
-  tagTextNeutral: {
+  infoBadgeText: {
     fontSize: 12,
     fontWeight: '600',
     color: '#4B5751',
   },
-  metricsRow: {
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 22,
-  },
-  metricCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 16,
-    width: '48%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  metricIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  metricValue: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#1E2923',
-  },
-  metricLabel: {
-    fontSize: 13,
-    color: '#6B7871',
-    marginTop: 2,
-    marginBottom: 8,
-  },
-  metricNote: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1E2923',
-  },
-  seeAllLink: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#2D6A4F',
+    gap: 12,
+    marginBottom: 18,
   },
   parcelaCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 14,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
   },
   parcelaIconBox: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -472,16 +466,17 @@ const styles = StyleSheet.create({
   },
   parcelaNome: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#1E2923',
   },
-  parcelaSub: {
+  parcelaDetalhe: {
     fontSize: 12,
     color: '#6B7871',
-    marginTop: 3,
+    marginTop: 2,
   },
-  parcelaBadge: {
+  parcelaStatus: {
     fontSize: 11,
     fontWeight: '800',
+    marginLeft: 8,
   },
 });
