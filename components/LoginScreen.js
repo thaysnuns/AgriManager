@@ -1,100 +1,331 @@
-/// components/LoginScreen.js
-import React from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
+// components/LoginScreen.js
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  ImageBackground,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import BrandLogo from './ui/BrandLogo';
+import AuthInput from './ui/AuthInput';
+import PrimaryButton from './ui/PrimaryButton';
 
-export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }) {
+export default function LoginScreen({
+  onNavigateToRegister,
+  onOpenRegister,
+  onLoginSuccess,
+}) {
+  const [email, setEmail] = useState('maria.costa@quintadovale.pt');
+  const [password, setPassword] = useState('•••••••••••');
+  const [manterSessao, setManterSessao] = useState(true);
+  const [mensagemInfo, setMensagemInfo] = useState('');
+  const [erro, setErro] = useState('');
+
+  const handleAbrirRegisto = () => {
+    setErro('');
+    setMensagemInfo('');
+    if (onNavigateToRegister) {
+      onNavigateToRegister();
+    } else if (onOpenRegister) {
+      onOpenRegister();
+    }
+  };
+
+  const handleEntrar = () => {
+    const emailLimpo = email.trim();
+    const passLimpa = password.trim();
+
+    if (!emailLimpo || !passLimpa) {
+      setMensagemInfo('');
+      setErro('Introduza o email e a palavra-passe.');
+      return;
+    }
+
+    if (!emailLimpo.includes('@')) {
+      setMensagemInfo('');
+      setErro('Introduza um endereço de email válido.');
+      return;
+    }
+
+    setErro('');
+    setMensagemInfo('');
+
+    if (onLoginSuccess) {
+      onLoginSuccess({
+        email: emailLimpo,
+        manterSessao,
+      });
+    }
+  };
+
+  const handleRecuperarPassword = () => {
+    setErro('');
+    if (!email.trim()) {
+      setMensagemInfo(
+        'Indique o seu email acima para receber instruções de recuperação.'
+      );
+      return;
+    }
+    setMensagemInfo(
+      `Enviámos instruções de recuperação para ${email.trim()}.`
+    );
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Imagem de Topo com Overlay */}
-      <ImageBackground 
-        source={{ uri: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1000&q=80' }} 
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* Imagem Hero Superior */}
+      <ImageBackground
+        source={{
+          uri: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80',
+        }}
         style={styles.heroImage}
       >
         <View style={styles.heroOverlay}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>● A TERRA, EM TEMPO REAL</Text>
+          <View style={styles.heroBadge}>
+            <View style={styles.greenDot} />
+            <Text style={styles.heroBadgeText}>A TERRA, EM TEMPO REAL</Text>
           </View>
-          <Text style={styles.heroTitle}>Decisões melhores, desde o terreno.</Text>
+          <Text style={styles.heroTitle}>
+            Decisões melhores,{'\n'}desde o terreno.
+          </Text>
         </View>
       </ImageBackground>
 
-      {/* Formulário de Login */}
-      <View style={styles.formContainer}>
-        <View style={styles.brandRow}>
-          <View style={styles.logoIcon}>
-            <Ionicons name="leaf" size={20} color="#064e3b" />
-          </View>
-          <Text style={styles.brandTitle}>Terra Clara</Text>
+      {/* Corpo do Formulário */}
+      <View style={styles.formWrapper}>
+        <BrandLogo />
+
+        <Text style={styles.subtitle}>
+          Entre para acompanhar campos, equipas e operações agrícolas.
+        </Text>
+
+        <AuthInput
+          label="EMAIL"
+          iconName="mail-outline"
+          iconLibrary="ion"
+          value={email}
+          onChangeText={(t) => {
+            setEmail(t);
+            if (erro) setErro('');
+            if (mensagemInfo) setMensagemInfo('');
+          }}
+          placeholder="nome@empresa.pt"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <AuthInput
+          label="PALAVRA-PASSE"
+          iconName="lock-closed-outline"
+          iconLibrary="ion"
+          value={password}
+          onChangeText={(t) => {
+            setPassword(t);
+            if (erro) setErro('');
+          }}
+          placeholder="•••••••••••"
+          secureTextEntry
+        />
+
+        <View style={styles.linksRow}>
+          <TouchableOpacity
+            style={styles.keepSignedBtn}
+            activeOpacity={0.75}
+            delayPressIn={0}
+            onPress={() => setManterSessao((prev) => !prev)}
+          >
+            <View
+              style={[
+                styles.checkboxBox,
+                manterSessao && styles.checkboxBoxActive,
+              ]}
+            >
+              {manterSessao ? (
+                <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+              ) : null}
+            </View>
+            <Text style={styles.keepSignedText}>Manter sessão iniciada</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.75}
+            delayPressIn={0}
+            onPress={handleRecuperarPassword}
+          >
+            <Text style={styles.forgotText}>Esqueci-me da palavra-passe</Text>
+          </TouchableOpacity>
         </View>
 
-        <Text style={styles.subtitle}>Entre para acompanhar campos, equipas e operações agrícolas.</Text>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>EMAIL</Text>
-          <View style={styles.inputBox}>
-            <Ionicons name="mail-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
-            <TextInput 
-              style={styles.inputText} 
-              defaultValue="maria.costa@quintadovale.pt" 
-              placeholderTextColor="#94a3b8"
+        {mensagemInfo ? (
+          <View style={styles.infoBox}>
+            <Ionicons
+              name="information-circle-outline"
+              size={17}
+              color="#24593F"
             />
+            <Text style={styles.infoText}>{mensagemInfo}</Text>
           </View>
+        ) : null}
+
+        {erro ? <Text style={styles.errorText}>{erro}</Text> : null}
+
+        <PrimaryButton title="Entrar" onPress={handleEntrar} />
+
+        <View style={styles.footerRow}>
+          <Text style={styles.footerText}>Ainda não tem conta? </Text>
+          <TouchableOpacity
+            onPress={handleAbrirRegisto}
+            activeOpacity={0.75}
+            delayPressIn={0}
+          >
+            <Text style={styles.footerLink}>Criar conta</Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>PALAVRA-PASSE</Text>
-          <View style={styles.inputBox}>
-            <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
-            <TextInput 
-              style={styles.inputText} 
-              secureTextEntry 
-              defaultValue="••••••••" 
-              placeholderTextColor="#94a3b8"
-            />
-          </View>
-        </View>
-
-        <View style={styles.optionsRow}>
-          <Text style={styles.optionText}>Manter sessão iniciada</Text>
-          <Text style={styles.linkText}>Esqueci-me da palavra-passe</Text>
-        </View>
-
-        <TouchableOpacity style={styles.primaryButton} onPress={onLoginSuccess}>
-          <Text style={styles.primaryButtonText}>→ Entrar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={onNavigateToRegister} style={styles.footerRedirect}>
-          <Text style={styles.footerText}>Ainda não tem conta? <Text style={styles.linkBold}>Criar conta</Text></Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: '#f8fafc' },
-  heroImage: { height: 260, width: '100%', justifyContent: 'flex-end' },
-  heroOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', padding: 20, justifyContent: 'flex-end', paddingBottom: 24 },
-  badge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 8 },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  heroTitle: { color: '#fff', fontSize: 24, fontWeight: '800', lineHeight: 30 },
-  formContainer: { padding: 24, backgroundColor: '#f8fafc', borderTopLeftRadius: 24, borderTopRightRadius: 24, marginTop: -20 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  logoIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#d1fae5', justifyContent: 'center', alignItems: 'center', marginRight: 8 },
-  brandTitle: { fontSize: 20, fontWeight: '700', color: '#064e3b' },
-  subtitle: { fontSize: 13, color: '#64748b', marginBottom: 24 },
-  inputGroup: { marginBottom: 16 },
-  inputLabel: { fontSize: 10, fontWeight: '700', color: '#64748b', marginBottom: 6, letterSpacing: 0.5 },
-  inputBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, height: 50 },
-  inputIcon: { marginRight: 10 },
-  inputText: { flex: 1, fontSize: 14, color: '#1e293b' },
-  optionsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  optionText: { fontSize: 12, color: '#64748b' },
-  linkText: { fontSize: 12, color: '#059669', fontWeight: '600' },
-  primaryButton: { backgroundColor: '#064e3b', height: 52, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  primaryButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  footerRedirect: { alignItems: 'center', paddingBottom: 20 },
-  footerText: { fontSize: 13, color: '#64748b' },
-  linkBold: { color: '#064e3b', fontWeight: '700' },
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#F4F6F3',
+  },
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#F4F6F3',
+  },
+  heroImage: {
+    height: 255,
+    width: '100%',
+    justifyContent: 'flex-end',
+  },
+  heroOverlay: {
+    padding: 20,
+    paddingBottom: 24,
+    backgroundColor: 'rgba(20, 32, 24, 0.34)',
+  },
+  heroBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(244, 246, 243, 0.92)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  greenDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#2D6A4F',
+    marginRight: 6,
+  },
+  heroBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#1E2923',
+    letterSpacing: 0.4,
+  },
+  heroTitle: {
+    fontSize: 25,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    lineHeight: 30,
+  },
+  formWrapper: {
+    padding: 22,
+    paddingTop: 22,
+    paddingBottom: 32,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#6B7871',
+    marginTop: 12,
+    marginBottom: 18,
+    lineHeight: 19,
+  },
+  linksRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 2,
+    marginBottom: 18,
+  },
+  keepSignedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  checkboxBox: {
+    width: 17,
+    height: 17,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#8B9890',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxBoxActive: {
+    backgroundColor: '#1B3B2B',
+    borderColor: '#1B3B2B',
+  },
+  keepSignedText: {
+    fontSize: 12,
+    color: '#6B7871',
+  },
+  forgotText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#244735',
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#DCEAE0',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1E2923',
+    lineHeight: 17,
+  },
+  errorText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#C2410C',
+    marginBottom: 12,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  footerText: {
+    fontSize: 13,
+    color: '#6B7871',
+  },
+  footerLink: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#244735',
+  },
 });

@@ -83,10 +83,10 @@ const PARCELAS_INICIAIS = [
 ];
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authScreen, setAuthScreen] = useState('login');
 
-  const [activeScreen, setActiveScreen] = useState('campos');
+  const [activeScreen, setActiveScreen] = useState('inicio');
   const [campos, setCampos] = useState(CAMPOS_SCREEN_INICIAIS);
   const [camposSubScreen, setCamposSubScreen] = useState(null);
   const [campoEmEdicao, setCampoEmEdicao] = useState(null);
