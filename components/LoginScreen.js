@@ -1,9 +1,56 @@
 /// components/LoginScreen.js
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }) {
+  const [email, setEmail] = useState('maria.costa@quintadovale.pt');
+  const [password, setPassword] = useState('123456');
+  const [erro, setErro] = useState('');
+
+  const contasPermitidas = {
+    'maria.costa@quintadovale.pt': {
+      password: '123456',
+      nomeCompleto: 'Maria Costa',
+      empresa: 'Quinta do Vale',
+      role: 'agricultor',
+    },
+    'operador': {
+      password: '123456',
+      nomeCompleto: 'João Silva',
+      empresa: 'Quinta do Vale',
+      role: 'operador',
+    },
+
+    'adm': {
+      password: '123456',
+      nomeCompleto: 'ADM',
+      empresa: 'Quinta do Vale',
+      role: 'administrador',
+    },
+
+  };
+
+  const handleLogin = () => {
+    const emailLimpo = email.trim().toLowerCase();
+    const conta = contasPermitidas[emailLimpo];
+
+    if (!conta || conta.password !== password) {
+      setErro('E-mail ou palavra-passe incorretos.');
+      return;
+    }
+
+    setErro('');
+    if (onLoginSuccess) {
+      onLoginSuccess({
+        email: emailLimpo,
+        nomeCompleto: conta.nomeCompleto,
+        empresa: conta.empresa,
+        role: conta.role,
+      });
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Imagem de Topo com Overlay */}
@@ -25,7 +72,7 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }) {
           <View style={styles.logoIcon}>
             <Ionicons name="leaf" size={20} color="#064e3b" />
           </View>
-          <Text style={styles.brandTitle}>Terra Clara</Text>
+          <Text style={styles.brandTitle}>AgriManager</Text>
         </View>
 
         <Text style={styles.subtitle}>Entre para acompanhar campos, equipas e operações agrícolas.</Text>
@@ -36,7 +83,8 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }) {
             <Ionicons name="mail-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
             <TextInput 
               style={styles.inputText} 
-              defaultValue="maria.costa@quintadovale.pt" 
+              value={email}
+              onChangeText={setEmail}
               placeholderTextColor="#94a3b8"
             />
           </View>
@@ -49,18 +97,23 @@ export default function LoginScreen({ onNavigateToRegister, onLoginSuccess }) {
             <TextInput 
               style={styles.inputText} 
               secureTextEntry 
-              defaultValue="••••••••" 
+              value={password}
+              onChangeText={setPassword}
               placeholderTextColor="#94a3b8"
             />
           </View>
         </View>
+
+        {erro ? (
+          <Text style={styles.errorText}>{erro}</Text>
+        ) : null}
 
         <View style={styles.optionsRow}>
           <Text style={styles.optionText}>Manter sessão iniciada</Text>
           <Text style={styles.linkText}>Esqueci-me da palavra-passe</Text>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={onLoginSuccess}>
+        <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
           <Text style={styles.primaryButtonText}>→ Entrar</Text>
         </TouchableOpacity>
 
@@ -97,4 +150,5 @@ const styles = StyleSheet.create({
   footerRedirect: { alignItems: 'center', paddingBottom: 20 },
   footerText: { fontSize: 13, color: '#64748b' },
   linkBold: { color: '#064e3b', fontWeight: '700' },
+  errorText: { color: '#dc2626', fontSize: 12, marginTop: 8, textAlign: 'center' },
 });
