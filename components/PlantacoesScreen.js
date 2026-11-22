@@ -1,5 +1,5 @@
 // components/PlantacoesScreen.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -64,11 +64,18 @@ const PLANTACOES_DATA = [
   },
 ];
 
-export default function PlantacoesScreen() {
+export default function PlantacoesScreen({ onOpenCriarPlantacao, novaPlantacao }) {
   const [activeFilter, setActiveFilter] = useState('Ativas 4');
+  const [plantacoes, setPlantacoes] = useState(PLANTACOES_DATA);
+
   const filtros = ['Ativas 4', 'Planeadas 2', 'Histórico'];
 
-  const listaFiltrada = PLANTACOES_DATA.filter((item) => {
+  useEffect(() => {
+    if (!novaPlantacao) return;
+    setPlantacoes((listaAnterior) => [novaPlantacao, ...listaAnterior]);
+  }, [novaPlantacao]);
+
+  const listaFiltrada = plantacoes.filter((item) => {
     if (activeFilter === 'Histórico') return false;
     return item.categoria === activeFilter;
   });
@@ -81,7 +88,11 @@ export default function PlantacoesScreen() {
           <Text style={styles.title}>Plantações</Text>
           <Text style={styles.subtitle}>Campanha 2026 · 4 culturas</Text>
         </View>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => onOpenCriarPlantacao && onOpenCriarPlantacao()}
+          activeOpacity={0.85}
+        >
           <Ionicons name="add" size={24} color="#1E2923" />
         </TouchableOpacity>
       </View>
