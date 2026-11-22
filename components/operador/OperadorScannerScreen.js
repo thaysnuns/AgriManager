@@ -1,11 +1,14 @@
 // components/OperadorScannerScreen.js — "Scanner QR" (operador)
 // A câmara aqui é uma imagem de exemplo. Para ler QR de verdade, usar expo-camera (CameraView) no lugar do ImageBackground.
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ImageBackground, Animated, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ImageBackground, Image, Animated, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const FOTO_ETIQUETA = {
-  uri: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1000&q=80',
+  uri: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=85',
+};
+const IMAGEM_QR = {
+  uri: 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=VP03-2026&bgcolor=FFFFFF&color=1E2923',
 };
 const ALTURA_MOLDURA = 210;
 
@@ -56,6 +59,9 @@ export default function OperadorScannerScreen({ onCodigo, onHistorico }) {
 
         <View style={styles.frame}>
           <Animated.View style={[styles.scanLine, { transform: [{ translateY }] }]} />
+          <View style={styles.qrCard}>
+            <Image source={IMAGEM_QR} style={styles.qrImage} resizeMode="contain" />
+          </View>
           <Text style={styles.frameText}>A PROCURAR CÓDIGO...</Text>
         </View>
 
@@ -110,9 +116,14 @@ const styles = StyleSheet.create({
   frame: {
     width: 230, height: ALTURA_MOLDURA, marginTop: 26, borderWidth: 3, borderColor: '#FFFFFF',
     borderRadius: 26, overflow: 'hidden', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 8,
+    backgroundColor: 'rgba(30,41,35,0.12)',
   },
-  scanLine: { position: 'absolute', top: 0, left: 12, right: 12, height: 2, borderRadius: 1, backgroundColor: '#7BE0A6' },
-  frameText: { fontSize: 11, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.4 },
+  qrCard: {
+    position: 'absolute', top: 10, width: 168, height: 168, borderRadius: 18,
+    backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center',
+    padding: 8, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
+  },
+  qrImage: { width: 152, height: 152, borderRadius: 10 },
   cameraButtons: { position: 'absolute', bottom: 14, flexDirection: 'row', gap: 70 },
   camBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(255,255,255,0.92)', justifyContent: 'center', alignItems: 'center' },
   manualCard: { backgroundColor: '#FFFFFF', borderRadius: 20, borderWidth: 1, borderColor: '#E5E9E6', padding: 16, marginBottom: 14 },
@@ -122,4 +133,6 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 14, color: '#1E2923' },
   offlineRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
   offlineText: { fontSize: 12.5, color: '#6B7871' },
+  scanLine: { position: 'absolute', top: 0, left: 12, right: 12, height: 2, borderRadius: 1, backgroundColor: '#7BE0A6', zIndex: 3 },
+  frameText: { fontSize: 11, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.4, zIndex: 4, textShadowColor: 'rgba(0,0,0,0.65)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
 });
