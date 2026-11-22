@@ -37,7 +37,8 @@ export default function OperadorParcelaScreen({
   onContinuar,
   onMais,
 }) {
-  const t = parcela.tarefa;
+  const p = { ...EXEMPLO, ...(parcela || {}) };
+  const t = parcela?.tarefa || EXEMPLO.tarefa;
 
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -46,7 +47,7 @@ export default function OperadorParcelaScreen({
           <Ionicons name="arrow-back" size={20} color="#1E2923" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>{parcela.nome}</Text>
+          <Text style={styles.title}>{p.nome}</Text>
           <Text style={styles.subtitle}>Atribuída à sua equipa</Text>
         </View>
         <TouchableOpacity style={[styles.roundBtn, styles.white]} onPress={onMais} activeOpacity={0.8}>
@@ -57,7 +58,7 @@ export default function OperadorParcelaScreen({
       <ImageBackground source={FOTO} style={styles.photo} imageStyle={{ borderRadius: 20 }}>
         <View style={styles.distPill}>
           <View style={styles.greenDot} />
-          <Text style={styles.distText}>{parcela.distancia}</Text>
+          <Text style={styles.distText}>{p.distancia}</Text>
         </View>
         <TouchableOpacity style={styles.locateBtn} activeOpacity={0.85}>
           <Ionicons name="locate-outline" size={20} color="#1B3B2B" />
@@ -82,17 +83,17 @@ export default function OperadorParcelaScreen({
       <View style={styles.culturaCard}>
         <View style={styles.culturaTop}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.culturaNome}>{parcela.cultura}</Text>
-            <Text style={styles.culturaDetalhe}>{parcela.detalhe}</Text>
+            <Text style={styles.culturaNome}>{p.cultura}</Text>
+            <Text style={styles.culturaDetalhe}>{p.detalhe}</Text>
           </View>
           <View style={styles.estadoBadge}>
-            <Text style={styles.estadoText}>{parcela.estado}</Text>
+            <Text style={styles.estadoText}>{p.estado}</Text>
           </View>
         </View>
         <View style={styles.statsRow}>
-          <MiniStat tint value={parcela.humidade} label="Humidade" />
-          <MiniStat tint value={parcela.solo} label="Solo" />
-          <MiniStat tint value={parcela.ndvi} label="NDVI" />
+          <MiniStat tint value={p.humidade} label="Humidade" />
+          <MiniStat tint value={p.solo} label="Solo" />
+          <MiniStat tint value={p.ndvi} label="NDVI" />
         </View>
       </View>
 
