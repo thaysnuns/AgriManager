@@ -39,7 +39,7 @@ import CriarTarefaScreen from './components/CriarTarefaScreen';
 import CriarPlantacaoScreen from './components/CriarPlantacaoScreen';
 
 export default function App() {
-  const [screenMode, setScreenMode] = useState('app');
+  const [screenMode, setScreenMode] = useState('login');
   const [activeTab, setActiveTab] = useState('inicio');
   const [campoSelecionado, setCampoSelecionado] = useState(null);
   const [campoFiltroParcelas, setCampoFiltroParcelas] = useState(null);
