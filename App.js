@@ -26,11 +26,13 @@ import OperadorTarefasScreen from './components/operador/OperadorTarefasScreen';
 import OperadorScannerScreen from './components/operador/OperadorScannerScreen';
 import OperadorParcelaScreen from './components/operador/OperadorParcelaScreen';
 import OperadorPerfilScreen from './components/operador/OperadorPerfilScreen';
+import OperadorTarefaDetalheScreen from './components/operador/OperadorTarefaDetalheScreen';
 import AdminDashboardScreen from './components/adm/AdminDashboardScreen';
 import AdminCamposScreen from './components/adm/AdminCamposScreen';
 import AdminEmpresasScreen from './components/adm/AdminEmpresasScreen';
 import AdminUtilizadoresScreen from './components/adm/AdminUtilizadoresScreen';
 import AdminParcelaDetalheScreen from './components/adm/AdminParcelaDetalheScreen';
+import AdminPerfilScreen from './components/adm/AdminPerfilScreen';
 import CriarParcelaScreen from './components/CriarParcelaScreen';
 import EditarParcelaScreen from './components/EditarParcelaScreen';
 import CriarTarefaScreen from './components/CriarTarefaScreen';
@@ -49,9 +51,11 @@ export default function App() {
   const [novoParcela, setNovoParcela] = useState(null);
   const [mostrarCriarParcela, setMostrarCriarParcela] = useState(false);
   const [operadorParcelaAtiva, setOperadorParcelaAtiva] = useState(null);
+  const [operadorTarefaAtiva, setOperadorTarefaAtiva] = useState(null);
   const [adminParcelaAtiva, setAdminParcelaAtiva] = useState(null);
   const [mostrarTarefasNoPerfil, setMostrarTarefasNoPerfil] = useState(false);
   const [mostrarCriarTarefa, setMostrarCriarTarefa] = useState(false);
+  const [origemCriarTarefa, setOrigemCriarTarefa] = useState('tarefas');
   const [parcelaEmEdicao, setParcelaEmEdicao] = useState(null);
   const [parcelaEditada, setParcelaEditada] = useState(null);
   const [mostrarCriarPlantacao, setMostrarCriarPlantacao] = useState(false);
@@ -72,6 +76,7 @@ export default function App() {
     setMostrarTarefasNoPerfil(false);
     setAdminParcelaAtiva(null);
     setMostrarCriarTarefa(false);
+    setOrigemCriarTarefa('tarefas');
     setMostrarCriarParcela(false);
     setMostrarCriarPlantacao(false);
   };
@@ -85,6 +90,7 @@ export default function App() {
     });
     resetSubNavegacao();
     setOperadorParcelaAtiva(null);
+    setOperadorTarefaAtiva(null);
     setActiveTab(
       userData?.role === 'operador'
         ? 'tarefas'
@@ -146,9 +152,14 @@ export default function App() {
               <OperadorTarefasScreen
                 iniciais={primeiroNome === 'João' ? 'JS' : primeiroNome.slice(0, 2).toUpperCase()}
                 user={currentUser}
+                onOpenPerfil={() => setActiveTab('perfil')}
+                onContinuar={(tarefa) => {
+                  setOperadorTarefaAtiva(tarefa);
+                  setActiveTab('tarefaDetalhe');
+                }}
                 onSelectTarefa={(tarefa) => {
-                  setOperadorParcelaAtiva(tarefa);
-                  setActiveTab('mapa');
+                  setOperadorTarefaAtiva(tarefa);
+                  setActiveTab('tarefaDetalhe');
                 }}
               />
             )}
@@ -156,16 +167,23 @@ export default function App() {
             {currentUser?.role !== 'operador' && currentUser?.role !== 'administrador' && activeTab === 'tarefas' && (
               mostrarCriarTarefa ? (
                 <CriarTarefaScreen
-                  onBack={() => setMostrarCriarTarefa(false)}
+                  onBack={() => {
+                    setMostrarCriarTarefa(false);
+                    setActiveTab(origemCriarTarefa);
+                  }}
                   onTarefaCriada={(tarefa) => {
                     console.log('Nova tarefa:', tarefa);
                     setMostrarCriarTarefa(false);
+                    setActiveTab(origemCriarTarefa);
                   }}
                 />
               ) : (
                 <TarefasScreen
                   onBack={() => setActiveTab('inicio')}
-                  onAdd={() => setMostrarCriarTarefa(true)}
+                  onAdd={() => {
+                    setOrigemCriarTarefa('tarefas');
+                    setMostrarCriarTarefa(true);
+                  }}
                 />
               )
             )}
@@ -204,6 +222,21 @@ export default function App() {
               />
             )}
 
+            {currentUser?.role === 'operador' && activeTab === 'tarefaDetalhe' && (
+              <OperadorTarefaDetalheScreen
+                tarefa={operadorTarefaAtiva}
+                onBack={() => setActiveTab('tarefas')}
+                onEstadoChange={(tarefa, estado) =>
+                  console.log('Estado da tarefa:', tarefa?.titulo, estado)
+                }
+                onAbrirMapa={() => setActiveTab('mapa')}
+                onLerQR={() => setActiveTab('scanner')}
+                onReportar={(tarefa, tipo, notas) =>
+                  console.log('Ocorrência:', tarefa?.titulo, tipo, notas)
+                }
+              />
+            )}
+
             {/* ABA INÍCIO */}
             {currentUser?.role !== 'administrador' && activeTab === 'inicio' && (
               <HomeScreen
@@ -239,9 +272,9 @@ export default function App() {
                   campoContexto={campoSelecionado}
                   onBack={() => setParcelaDetalhe(null)}
                   onCriarTarefa={() => {
-                    setParcelaDetalhe(null);
-                    setMostrarTarefasNoPerfil(true);
-                    setActiveTab('perfil');
+                    setOrigemCriarTarefa('campos');
+                    setActiveTab('tarefas');
+                    setMostrarCriarTarefa(true);
                   }}
                   onAbrirMapa={(p) =>
                     console.log('Abrir mapa da parcela:', p?.codigo || p?.nome)
@@ -311,9 +344,9 @@ export default function App() {
                   campoContexto={campoFiltroParcelas}
                   onBack={() => setParcelaDetalhe(null)}
                   onCriarTarefa={() => {
-                    setParcelaDetalhe(null);
-                    setMostrarTarefasNoPerfil(true);
-                    setActiveTab('perfil');
+                    setOrigemCriarTarefa('parcelas');
+                    setActiveTab('tarefas');
+                    setMostrarCriarTarefa(true);
                   }}
                   onAbrirMapa={(p) =>
                     console.log('Abrir mapa da parcela:', p?.codigo || p?.nome)
@@ -357,7 +390,9 @@ export default function App() {
             )}
 
             {/* ABA PERFIL */}
-            {currentUser?.role !== 'operador' && activeTab === 'perfil' && (
+           {currentUser?.role !== 'operador' &&
+  currentUser?.role !== 'administrador' &&
+  activeTab === 'perfil' && (
                   <PerfilScreen
                     user={currentUser}
                     onLogout={() => {
@@ -430,6 +465,7 @@ export default function App() {
               <AdminDashboardScreen
                 iniciais="ADM"
                 onVerRelatorio={() => setActiveTab('empresas')}
+                onOpenPerfil={() => setActiveTab('perfil')}
                 onSelectEstado={(estado) => console.log('Estado da rede:', estado)}
               />
             )}
@@ -473,6 +509,19 @@ export default function App() {
                 onSelectUtilizador={(utilizador) =>
                   console.log('Utilizador selecionado:', utilizador.nome)
                 }
+              />
+            )}
+
+            {/* ABA ADMIN - PERFIL */}
+            {currentUser?.role === 'administrador' && activeTab === 'perfil' && (
+              <AdminPerfilScreen
+                user={currentUser}
+                onSettings={() => console.log('Abrir definições do administrador')}
+                onLogout={() => {
+                  resetSubNavegacao();
+                  setActiveTab('resumo');
+                  setScreenMode('login');
+                }}
               />
             )}
           </View>

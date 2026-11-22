@@ -44,7 +44,7 @@ const TAREFAS = [
 
 const dois = (n) => String(n).padStart(2, '0');
 
-export default function OperadorTarefasScreen({ iniciais = 'MC', user, onContinuar, onAbrirMapa, onSelectTarefa }) {
+export default function OperadorTarefasScreen({ iniciais = 'MC', user, onContinuar, onAbrirMapa, onSelectTarefa, onOpenPerfil }) {
   const [filtro, setFiltro] = useState('hoje');
   const [segundos, setSegundos] = useState(1 * 3600 + 24 * 60 + 18); // cronómetro da tarefa em curso
 
@@ -89,9 +89,13 @@ export default function OperadorTarefasScreen({ iniciais = 'MC', user, onContinu
           <Text style={styles.title}>As minhas tarefas</Text>
           <Text style={styles.subtitle}>{user?.email || 'Operador · Equipa Campo A'}</Text>
         </View>
-        <View style={styles.avatar}>
+        <TouchableOpacity
+          style={styles.avatar}
+          onPress={() => onOpenPerfil && onOpenPerfil()}
+          activeOpacity={0.85}
+        >
           <Text style={styles.avatarText}>{iniciais}</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.shiftCard}>

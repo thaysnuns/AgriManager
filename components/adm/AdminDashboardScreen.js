@@ -23,7 +23,7 @@ const ESTADO_REDE = [
 
 const ALTURA_MAX = 110;
 
-export default function AdminDashboardScreen({ iniciais = 'MC', onVerRelatorio, onSelectEstado }) {
+export default function AdminDashboardScreen({ iniciais = 'MC', onVerRelatorio, onSelectEstado, onOpenPerfil }) {
   const maximo = useMemo(() => Math.max(...ATIVIDADE.map((a) => a.valor)), []);
 
   const [estadoSelecionado, setEstadoSelecionado] = useState(null);
@@ -37,11 +37,15 @@ export default function AdminDashboardScreen({ iniciais = 'MC', onVerRelatorio, 
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.title}>Painel administrativo</Text>
-          <Text style={styles.subtitle}>Rede Terra Clara · setembro 2026</Text>
+          <Text style={styles.subtitle}>Rede AgriManager · setembro 2026</Text>
         </View>
-        <View style={styles.avatar}>
+        <TouchableOpacity
+          style={styles.avatar}
+          onPress={() => onOpenPerfil && onOpenPerfil()}
+          activeOpacity={0.85}
+        >
           <Text style={styles.avatarText}>{iniciais}</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.statsRow}>

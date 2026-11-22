@@ -23,6 +23,7 @@ const ADMINISTRADOR_TABS = [
   { key: 'utilizadores', label: 'Utilizadores', icon: 'people-outline', iconActive: 'people' },
   { key: 'empresas', label: 'Empresas', icon: 'business-outline', iconActive: 'business' },
   { key: 'campos', label: 'Campos', icon: 'map-outline', iconActive: 'map' },
+  { key: 'perfil', label: 'Perfil', icon: 'person-outline', iconActive: 'person' },
 ];
 
 export default function BottomNav({ activeTab = 'inicio', onSelectTab, role = 'agricultor' }) {

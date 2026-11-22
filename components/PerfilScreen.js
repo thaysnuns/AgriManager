@@ -49,6 +49,7 @@ export default function PerfilScreen({ onLogout, user }) {
 
   const [tela, setTela] = useState('perfil'); // 'perfil' | 'operadores' | 'registar' | 'tarefas'
   const [operadores, setOperadores] = useState(OPERADORES_INICIAIS);
+  const [novoOperador, setNovoOperador] = useState(null);
 
   const irParaPerfil = useCallback(() => setTela('perfil'), []);
   const irParaOperadores = useCallback(() => setTela('operadores'), []);
@@ -56,14 +57,21 @@ export default function PerfilScreen({ onLogout, user }) {
   const irParaTarefas = useCallback(() => setTela('tarefas'), []);
   const registar = useCallback((novo) => {
     setOperadores((atual) => [...atual, { id: String(Date.now()), ...novo }]);
+    setNovoOperador(novo);
     setTela('operadores');
   }, []);
 
   if (tela === 'operadores') {
-    return <OperadoresScreen operadores={operadores} onBack={irParaPerfil} onAdicionar={irParaRegistar} />;
+    return (
+      <OperadoresScreen
+        onBack={irParaPerfil}
+        onAddOperador={irParaRegistar}
+        novoOperador={novoOperador}
+      />
+    );
   }
   if (tela === 'registar') {
-    return <RegistarOperadorScreen onBack={irParaOperadores} onRegistar={registar} />;
+    return <RegistarOperadorScreen onBack={irParaOperadores} onRegistarOperador={registar} />;
   }
 
   return (
