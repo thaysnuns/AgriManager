@@ -78,7 +78,7 @@ const TAREFAS_A_SEGUIR = [
   },
 ];
 
-export default function TarefasScreen() {
+export default function TarefasScreen({ onBack, onAdd }) {
   const [selectedDay, setSelectedDay] = useState('28');
 
   const renderIcon = (item) => {
@@ -92,11 +92,22 @@ export default function TarefasScreen() {
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       {/* Cabeçalho */}
       <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.title}>Tarefas</Text>
-          <Text style={styles.subtitle}>8 hoje · 3 concluídas</Text>
+        <View style={styles.headerTitleRow}>
+          {onBack && (
+            <TouchableOpacity style={styles.backButton} onPress={onBack}>
+              <Ionicons name="arrow-back" size={22} color="#1E2923" />
+            </TouchableOpacity>
+          )}
+          <View>
+            <Text style={styles.title}>Tarefas</Text>
+            <Text style={styles.subtitle}>8 hoje · 3 concluídas</Text>
+          </View>
         </View>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={onAdd}
+          activeOpacity={0.85}
+        >
           <Ionicons name="add" size={24} color="#1E2923" />
         </TouchableOpacity>
       </View>
@@ -188,6 +199,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 18,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
   },
   title: {
     fontSize: 26,
