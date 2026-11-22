@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ImageBackground,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import SearchFilterBar from './ui/SearchFilterBar';
@@ -70,6 +71,7 @@ export default function CamposScreen({
   const [campos, setCampos] = useState(CAMPOS_INICIAIS);
   const [pesquisa, setPesquisa] = useState('');
   const [filtro, setFiltro] = useState('todos');
+  const [campoParaEliminar, setCampoParaEliminar] = useState(null);
   const [ordenarPorArea, setOrdenarPorArea] = useState(false);
 
   useEffect(() => {
@@ -127,6 +129,7 @@ export default function CamposScreen({
 
   const handleApagarCampo = (id) => {
     setCampos((prev) => prev.filter((item) => item.id !== id));
+    setCampoParaEliminar(null);
   };
 
   const handleSelecionarCampo = (campo) => {
@@ -152,8 +155,11 @@ export default function CamposScreen({
     });
 
     if (ordenarPorArea) {
-      return [...lista].sort((a, b) => (b.area || 0) - (a.area || 0));
+      return [...lista].sort(
+        (a, b) => (Number(b.area) || 0) - (Number(a.area) || 0)
+      );
     }
+
     return lista;
   }, [campos, pesquisa, filtro, ordenarPorArea]);
 
@@ -288,13 +294,49 @@ export default function CamposScreen({
               style={styles.deleteBtn}
               activeOpacity={0.8}
               delayPressIn={0}
-              onPress={() => handleApagarCampo(campo.id)}
+              onPress={() => setCampoParaEliminar(campo)}
             >
               <Ionicons name="trash-outline" size={14} color="#C26D1F" />
             </TouchableOpacity>
           </View>
         </View>
       ))}
+
+      {/* Modal de Confirmação */}
+      <Modal
+        visible={!!campoParaEliminar}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCampoParaEliminar(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalIconBox}>
+              <Ionicons name="trash-outline" size={24} color="#B42318" />
+            </View>
+            <Text style={styles.modalTitle}>Eliminar campo?</Text>
+            <Text style={styles.modalMessage}>
+              Tem a certeza que deseja eliminar {campoParaEliminar?.nome}? Esta ação não pode ser anulada.
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setCampoParaEliminar(null)}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={() => handleApagarCampo(campoParaEliminar.id)}
+              >
+                <Text style={[styles.modalButtonText, styles.confirmButtonText]}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -452,5 +494,63 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6E8D8',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E2923',
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: '#6B7871',
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1E2923',
+  },
+  confirmButton: {
+    backgroundColor: '#F6E8D8',
+  },
+  modalIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(180, 35, 24, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 15,
+  },
+  confirmButtonText: {
+    color: '#B42318',
+    fontWeight: '700',
   },
 });
