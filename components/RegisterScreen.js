@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BrandLogo from './ui/BrandLogo';
-import AuthInput from './ui/AuthInput';
+import AuthInput from './ui/Authinput';
 import PrimaryButton from './ui/PrimaryButton';
 
 export default function RegisterScreen({ onBackToLogin, onRegisterSuccess }) {
