@@ -1,11 +1,12 @@
 // components/ParcelasScreen.js
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ParcelaCard from './ui/ParcelaCard';
@@ -95,12 +96,16 @@ export default function ParcelasScreen({
   onEditParcela,
   onDeleteParcela,
   onQrParcela,
+  novaParcela,
+  parcelaEditada,
 }) {
   const [selectedCat, setSelectedCat] = useState('todas');
   const [ordenarPor, setOrdenarPor] = useState('campo');
+  const [parcelas, setParcelas] = useState(PARCELAS_DADOS);
+  const [parcelaParaEliminar, setParcelaParaEliminar] = useState(null);
 
   const parcelasVisiveis = useMemo(() => {
-    const lista = PARCELAS_DADOS.filter((item) => {
+    const lista = parcelas.filter((item) => {
       if (campoFiltro?.nome && item.campo !== campoFiltro.nome) {
         return false;
       }
@@ -119,7 +124,7 @@ export default function ParcelasScreen({
       ordenada.sort((a, b) => a.campo.localeCompare(b.campo));
     }
     return ordenada;
-  }, [campoFiltro, selectedCat, ordenarPor]);
+  }, [campoFiltro, selectedCat, ordenarPor, parcelas]);
 
   const totalParcelasTexto = campoFiltro
     ? `${parcelasVisiveis.length} parcelas em ${campoFiltro.nome}`
@@ -143,6 +148,69 @@ export default function ParcelasScreen({
       prev === 'campo' ? 'area' : prev === 'area' ? 'codigo' : 'campo'
     );
   };
+
+  const handleEliminarParcela = (parcela) => {
+    if (!parcela) return;
+    setParcelas((listaAnterior) =>
+      listaAnterior.filter((item) => item.id !== parcela.id)
+    );
+    setParcelaParaEliminar(null);
+    if (onDeleteParcela) onDeleteParcela(parcela);
+  };
+
+  useEffect(() => {
+    if (!novaParcela) return;
+
+    const nome = novaParcela.nome || 'Nova parcela';
+    const codigo = novaParcela.qrCode || nome;
+    const cultura = novaParcela.cultura || 'Cultura geral';
+    const tipo = cultura.toLowerCase().includes('touriga') || cultura.toLowerCase().includes('uva')
+      ? 'vinha'
+      : cultura.toLowerCase().includes('trigo') || cultura.toLowerCase().includes('cereal')
+      ? 'cereal'
+      : 'olival';
+
+    const criada = {
+      id: `p-${Date.now()}`,
+      codigo,
+      titulo: nome,
+      campo: novaParcela.campo,
+      tipo,
+      cultura,
+      area: Number(novaParcela.area) || 0,
+      valorPrincipal: novaParcela.valorPrincipal || '—',
+      legendaMetric: novaParcela.legendaMetric || 'Humidade',
+      alerta: false,
+    };
+
+    setParcelas((listaAnterior) => [criada, ...listaAnterior]);
+  }, [novaParcela]);
+
+  useEffect(() => {
+    if (!parcelaEditada) return;
+
+    setParcelas((listaAnterior) =>
+      listaAnterior.map((item) => {
+        const mesmoCodigo = item.codigo === parcelaEditada.codigo;
+        const mesmoId = parcelaEditada.id && item.id === parcelaEditada.id;
+        if (!mesmoId && !mesmoCodigo) return item;
+
+        const nome = parcelaEditada.nome || parcelaEditada.titulo || item.titulo || item.codigo;
+        const cultura = parcelaEditada.cultura || item.cultura;
+        const area = Number(parcelaEditada.area ?? item.area) || item.area;
+
+        return {
+          ...item,
+          ...parcelaEditada,
+          titulo: nome,
+          codigo: parcelaEditada.codigo || item.codigo,
+          campo: parcelaEditada.campo || item.campo,
+          cultura,
+          area,
+        };
+      })
+    );
+  }, [parcelaEditada]);
 
   return (
     <ScrollView
@@ -262,9 +330,46 @@ export default function ParcelasScreen({
               : onSelectParcela && onSelectParcela(item)
           }
           onEdit={(item) => onEditParcela && onEditParcela(item)}
-          onDelete={(item) => onDeleteParcela && onDeleteParcela(item)}
+          onDelete={(item) => setParcelaParaEliminar(item)}
         />
       ))}
+
+      <Modal
+        visible={!!parcelaParaEliminar}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setParcelaParaEliminar(null)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconBox}>
+              <Ionicons name="trash-outline" size={24} color="#B42318" />
+            </View>
+            <Text style={styles.modalTitle}>Eliminar parcela?</Text>
+            <Text style={styles.modalMessage}>
+              Tem a certeza que deseja eliminar {parcelaParaEliminar?.titulo || parcelaParaEliminar?.codigo || 'esta parcela'}? Esta ação não pode ser anulada.
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalBtnCancel}
+                onPress={() => setParcelaParaEliminar(null)}
+              >
+                <Text style={styles.modalBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalBtnCancel, styles.modalBtnConfirm]}
+                onPress={() => handleEliminarParcela(parcelaParaEliminar)}
+              >
+                <Text style={[styles.modalBtnText, styles.modalBtnConfirmText]}>
+                  Eliminar
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -297,4 +402,62 @@ const styles = StyleSheet.create({
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '800', color: '#1E2923' },
   sortAction: { fontSize: 14, fontWeight: '700', color: '#2D6A4F' },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5,
+  },
+  modalIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(180, 35, 24, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E2923',
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: '#6B7871',
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalBtnCancel: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBtnConfirm: {
+    backgroundColor: '#F6E8D8',
+  },
+  modalBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1E2923',
+  },
+  modalBtnConfirmText: {
+    color: '#B42318',
+    fontWeight: '700',
+  },
 });

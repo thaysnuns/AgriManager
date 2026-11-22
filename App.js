@@ -1,554 +1,581 @@
+// App.js
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import {
+  SafeAreaView,
+  StyleSheet,
+  StatusBar,
+  View,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 
 import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
 import HomeScreen from './components/HomeScreen';
-import CamposScreen, { CAMPOS_SCREEN_INICIAIS } from './components/CamposScreen';
+import CamposScreen from './components/CamposScreen';
 import CampoDetalheScreen from './components/CampoDetalheScreen';
-import CriarCamposScreen from './components/CriarCamposScreen';
-import EditarCamposScreen from './components/EditarCamposScreen';
-import EliminarCampoScreen from './components/EliminarCampoScreen';
 import ParcelasScreen from './components/ParcelasScreen';
 import ParcelaDetalheScreen from './components/ParcelaDetalheScreen';
+import BottomNav from './components/BottomNav';
+import PerfilScreen from './components/PerfilScreen';
+import TarefasScreen from './components/TarefasScreen';
+import PlantacoesScreen from './components/PlantacoesScreen';
+import CriarCamposScreen from './components/CriarCamposScreen';
+import EditarCamposScreen from './components/EditarCamposScreen';
+import OperadorTarefasScreen from './components/operador/OperadorTarefasScreen';
+import OperadorScannerScreen from './components/operador/OperadorScannerScreen';
+import OperadorParcelaScreen from './components/operador/OperadorParcelaScreen';
+import OperadorPerfilScreen from './components/operador/OperadorPerfilScreen';
+import OperadorTarefaDetalheScreen from './components/operador/OperadorTarefaDetalheScreen';
+import AdminDashboardScreen from './components/adm/AdminDashboardScreen';
+import AdminCamposScreen from './components/adm/AdminCamposScreen';
+import AdminEmpresasScreen from './components/adm/AdminEmpresasScreen';
+import AdminUtilizadoresScreen from './components/adm/AdminUtilizadoresScreen';
+import AdminParcelaDetalheScreen from './components/adm/AdminParcelaDetalheScreen';
+import AdminPerfilScreen from './components/adm/AdminPerfilScreen';
 import CriarParcelaScreen from './components/CriarParcelaScreen';
 import EditarParcelaScreen from './components/EditarParcelaScreen';
-import EliminarParcelaScreen from './components/EliminarParcelaScreen';
-import ParcelaCriadaScreen from './components/ParcelaCriadaScreen';
-import PlantacoesScreen from './components/PlantacoesScreen';
-import TarefasScreen from './components/TarefasScreen';
-import PerfilScreen from './components/PerfilScreen';
-import OperadoresScreen from './components/OperadoresScreen';
-import RegistarOperadorScreen from './components/RegistarOperadorScreen';
-import BottomNav from './components/BottomNav';
-
-const OPERADORES_INICIAIS = [
-  { id: 'op-1', nome: 'António Silva', email: 'antonio.silva@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-2', nome: 'Beatriz Ferreira', email: 'beatriz.ferreira@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-3', nome: 'Carlos Mendes', email: 'carlos.mendes@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-4', nome: 'Diogo Almeida', email: 'diogo.almeida@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-5', nome: 'Elsa Rocha', email: 'elsa.rocha@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-6', nome: 'Fernando Costa', email: 'fernando.costa@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-7', nome: 'Graça Ribeiro', email: 'graca.ribeiro@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-8', nome: 'Hélder Pereira', email: 'helder.pereira@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-9', nome: 'Inês Carvalho', email: 'ines.carvalho@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-10', nome: 'João Martins', email: 'joao.martins@quintadovale.pt', estado: 'Ativo' },
-  { id: 'op-11', nome: 'Luísa Sousa', email: 'luisa.sousa@quintadovale.pt', estado: 'Ativo' },
-];
-
-const CONVITES_INICIAIS = [
-  { id: 'cv-1', email: 'miguel.teixeira@quintadovale.pt', estado: 'Pendente' },
-  { id: 'cv-2', email: 'nuria.gomes@quintadovale.pt', estado: 'Pendente' },
-  { id: 'cv-3', email: 'paulo.oliveira@quintadovale.pt', estado: 'Pendente' },
-];
-
-const PARCELAS_INICIAIS = [
-  {
-    id: 'prc-1',
-    nome: 'Parcela ON-01',
-    campoNome: 'Olival Norte',
-    campo: 'Olival Norte',
-    area: 12.4,
-    cultura: 'Oliveira Galega',
-    qrCode: 'ON01-2026',
-    estado: 'Saudável',
-    estadoDetalhe: 'NDVI 0,83',
-    alerta: false,
-  },
-  {
-    id: 'prc-2',
-    nome: 'Parcela VP-03',
-    campoNome: 'Vinha do Poente',
-    campo: 'Vinha do Poente',
-    area: 6.2,
-    cultura: 'Touriga Nacional',
-    qrCode: 'VP03-2026',
-    estado: 'Atenção',
-    estadoDetalhe: 'Humidade baixa',
-    alerta: true,
-  },
-  {
-    id: 'prc-3',
-    nome: 'Parcela CS-01',
-    campoNome: 'Cereal Sul',
-    campo: 'Cereal Sul',
-    area: 15.8,
-    cultura: 'Trigo duro',
-    qrCode: 'CS01-2026',
-    estado: 'Saudável',
-    estadoDetalhe: 'NDVI 0,76',
-    alerta: false,
-  },
-];
+import CriarTarefaScreen from './components/CriarTarefaScreen';
+import CriarPlantacaoScreen from './components/CriarPlantacaoScreen';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authScreen, setAuthScreen] = useState('login');
-
-  const [activeScreen, setActiveScreen] = useState('inicio');
-  const [campos, setCampos] = useState(CAMPOS_SCREEN_INICIAIS);
-  const [camposSubScreen, setCamposSubScreen] = useState(null);
-  const [campoEmEdicao, setCampoEmEdicao] = useState(null);
-  const [campoEmEliminacao, setCampoEmEliminacao] = useState(null);
-  const [selectedCampo, setSelectedCampo] = useState(null);
-
-  const [parcelas, setParcelas] = useState(PARCELAS_INICIAIS);
-  const [parcelasSubScreen, setParcelasSubScreen] = useState(null);
-  const [parcelaEmEdicao, setParcelaEmEdicao] = useState(null);
-  const [parcelaEmEliminacao, setParcelaEmEliminacao] = useState(null);
-  const [parcelaRecemCriada, setParcelaRecemCriada] = useState(null);
+  const [screenMode, setScreenMode] = useState('app');
+  const [activeTab, setActiveTab] = useState('inicio');
+  const [campoSelecionado, setCampoSelecionado] = useState(null);
   const [campoFiltroParcelas, setCampoFiltroParcelas] = useState(null);
-  const [selectedParcela, setSelectedParcela] = useState(null);
-  const [selectedPlantacao, setSelectedPlantacao] = useState(null);
-  const [selectedTarefa, setSelectedTarefa] = useState(null);
+  const [parcelaDetalhe, setParcelaDetalhe] = useState(null);
+  const [mostrarCriarCampo, setMostrarCriarCampo] = useState(false);
+  const [campoEmEdicao, setCampoEmEdicao] = useState(null);
+  const [campoEditado, setCampoEditado] = useState(null);
+  const [novoCampo, setNovoCampo] = useState(null);
+  const [novoParcela, setNovoParcela] = useState(null);
+  const [mostrarCriarParcela, setMostrarCriarParcela] = useState(false);
+  const [operadorParcelaAtiva, setOperadorParcelaAtiva] = useState(null);
+  const [operadorTarefaAtiva, setOperadorTarefaAtiva] = useState(null);
+  const [adminParcelaAtiva, setAdminParcelaAtiva] = useState(null);
+  const [mostrarTarefasNoPerfil, setMostrarTarefasNoPerfil] = useState(false);
+  const [mostrarCriarTarefa, setMostrarCriarTarefa] = useState(false);
+  const [origemCriarTarefa, setOrigemCriarTarefa] = useState('tarefas');
+  const [parcelaEmEdicao, setParcelaEmEdicao] = useState(null);
+  const [parcelaEditada, setParcelaEditada] = useState(null);
+  const [mostrarCriarPlantacao, setMostrarCriarPlantacao] = useState(false);
+  const [novaPlantacao, setNovaPlantacao] = useState(null);
 
-  const [perfilSubScreen, setPerfilSubScreen] = useState(null);
-  const [operadores, setOperadores] = useState(OPERADORES_INICIAIS);
-  const [convites] = useState(CONVITES_INICIAIS);
-  const [selectedOperador, setSelectedOperador] = useState(null);
+  const [currentUser, setCurrentUser] = useState({
+    nomeCompleto: 'Maria Costa',
+    empresa: 'Quinta do Vale',
+    role: 'agricultor',
+  });
 
-  const limparDetalhes = () => {
-    setSelectedCampo(null);
-    setSelectedParcela(null);
-    setSelectedPlantacao(null);
-    setSelectedTarefa(null);
-    setSelectedOperador(null);
-    setCamposSubScreen(null);
+  const resetSubNavegacao = () => {
+    setCampoSelecionado(null);
+    setCampoFiltroParcelas(null);
+    setParcelaDetalhe(null);
+    setMostrarCriarCampo(false);
     setCampoEmEdicao(null);
-    setCampoEmEliminacao(null);
-    setParcelasSubScreen(null);
-    setParcelaEmEdicao(null);
-    setParcelaEmEliminacao(null);
-    setParcelaRecemCriada(null);
-    setPerfilSubScreen(null);
+    setMostrarTarefasNoPerfil(false);
+    setAdminParcelaAtiva(null);
+    setMostrarCriarTarefa(false);
+    setOrigemCriarTarefa('tarefas');
+    setMostrarCriarParcela(false);
+    setMostrarCriarPlantacao(false);
   };
 
-  const handleNavigate = (tab) => {
-    limparDetalhes();
-    if (tab !== 'parcelas') {
-      setCampoFiltroParcelas(null);
-    }
-    setActiveScreen(tab);
-  };
-
-  const handleAdicionarOperador = (novoOperador) => {
-    const item = {
-      id: `op-${Date.now()}`,
-      nome: novoOperador.nome,
-      email: novoOperador.email,
-      estado: novoOperador.estado || 'Ativo',
-    };
-    setOperadores((prev) => [item, ...prev]);
-    setPerfilSubScreen('operadores');
-  };
-
-  const handleEliminarCampo = (campoAlvo) => {
-    if (!campoAlvo?.id) return;
-    setCampos((prev) => prev.filter((item) => item.id !== campoAlvo.id));
-    if (selectedCampo?.id === campoAlvo.id) {
-      setSelectedCampo(null);
-    }
-  };
-
-  const handleCriarParcela = (novaParcela) => {
-    setParcelas((prev) => [novaParcela, ...prev]);
-    const nomeCampoAlvo = novaParcela.campoNome || novaParcela.campo;
-    if (nomeCampoAlvo) {
-      setCampos((prev) =>
-        prev.map((c) =>
-          c.nome === nomeCampoAlvo
-            ? { ...c, parcelasCount: (c.parcelasCount ?? 0) + 1 }
-            : c
-        )
-      );
-    }
-    setParcelaRecemCriada(novaParcela);
-    setParcelasSubScreen('criada');
-  };
-
-  const handleGuardarParcelaEditada = (parcelaAtualizada) => {
-    setParcelas((prev) =>
-      prev.map((item) =>
-        item.id === parcelaAtualizada.id ? parcelaAtualizada : item
-      )
+  const handleLoginSuccess = (userData) => {
+    setCurrentUser({
+      nomeCompleto: userData?.nomeCompleto || 'Maria Costa',
+      empresa: userData?.empresa || 'Quinta do Vale',
+      role: userData?.role || 'agricultor',
+      email: userData?.email,
+    });
+    resetSubNavegacao();
+    setOperadorParcelaAtiva(null);
+    setOperadorTarefaAtiva(null);
+    setActiveTab(
+      userData?.role === 'operador'
+        ? 'tarefas'
+        : userData?.role === 'administrador'
+        ? 'resumo'
+        : 'inicio'
     );
-    if (selectedParcela?.id === parcelaAtualizada.id) {
-      setSelectedParcela(parcelaAtualizada);
-    }
-    setParcelaEmEdicao(null);
-    setParcelasSubScreen(null);
+    setScreenMode('app');
   };
 
-  const handleConfirmarEliminarParcela = (parcelaAlvo) => {
-    if (!parcelaAlvo?.id) return;
-    const nomeCampoAlvo = parcelaAlvo.campoNome || parcelaAlvo.campo;
-    setParcelas((prev) => prev.filter((item) => item.id !== parcelaAlvo.id));
-    if (nomeCampoAlvo) {
-      setCampos((prev) =>
-        prev.map((c) =>
-          c.nome === nomeCampoAlvo
-            ? { ...c, parcelasCount: Math.max(0, (c.parcelasCount ?? 0) - 1) }
-            : c
-        )
-      );
-    }
-    if (selectedParcela?.id === parcelaAlvo.id) {
-      setSelectedParcela(null);
-    }
-    setParcelaEmEliminacao(null);
-    setParcelasSubScreen(null);
+  const handleRegisterSuccess = (newUserData) => {
+    setCurrentUser(newUserData);
+    resetSubNavegacao();
+    setActiveTab('inicio');
+    setScreenMode('app');
   };
 
-  if (!isAuthenticated) {
-    if (authScreen === 'register') {
-      return (
-        <SafeAreaView style={styles.safeArea}>
-          <StatusBar style="dark" />
-          <View style={styles.contentContainer}>
-            <RegisterScreen
-              onBackToLogin={() => setAuthScreen('login')}
-              onRegisterSuccess={() => {
-                setIsAuthenticated(true);
-                setActiveScreen('inicio');
-              }}
-            />
-          </View>
-        </SafeAreaView>
-      );
-    }
-
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
-        <View style={styles.contentContainer}>
-          <LoginScreen
-            onOpenRegister={() => setAuthScreen('register')}
-            onLoginSuccess={() => {
-              setIsAuthenticated(true);
-              setActiveScreen('inicio');
-            }}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const bottomNavActiveTab =
-    activeScreen === 'tarefas' ? 'inicio' : activeScreen;
-
-  const nomesCamposDisponiveis = campos.map((c) => c.nome).filter(Boolean);
-
-  const totalUtilizadoresResumo =
-    operadores.length + convites.length === 14 && operadores.length === 11
-      ? '12 utilizadores · 3 convites'
-      : `${operadores.length} operadores · ${convites.length} convites`;
-
-  const renderMainContent = () => {
-    if (selectedParcela) {
-      return (
-        <ParcelaDetalheScreen
-          parcela={selectedParcela}
-          onBack={() => setSelectedParcela(null)}
-        />
-      );
-    }
-
-    if (activeScreen === 'inicio') {
-      return (
-        <HomeScreen
-          onNavigateTab={(tab) => handleNavigate(tab)}
-          onSelectCampo={(campo) => {
-            limparDetalhes();
-            setCampoFiltroParcelas(null);
-            setActiveScreen('campos');
-            setSelectedCampo(campo);
-          }}
-          onSelectParcela={(parcela) => setSelectedParcela(parcela)}
-        />
-      );
-    }
-
-    if (activeScreen === 'campos') {
-      if (camposSubScreen === 'criar') {
-        return (
-          <CriarCamposScreen
-            onBack={() => setCamposSubScreen(null)}
-            onCriarCampo={(novoCampo) => {
-              const campoFormatado = {
-                id: novoCampo.id || `campo-${Date.now()}`,
-                codigo:
-                  novoCampo.codigo ||
-                  `CP-${String(campos.length + 1).padStart(2, '0')}`,
-                nome: novoCampo.nome,
-                area: novoCampo.area,
-                cultura: novoCampo.cultura,
-                tipoCultura: 'olival',
-                estado: 'Ativo',
-                estadoTitulo: 'Saudável',
-                detalheEstado: 'NDVI 0,78',
-                alerta: false,
-                parcelasCount: novoCampo.parcelasCount ?? 0,
-                zona: novoCampo.zona || novoCampo.localizacao || 'Exploração',
-                localizacao: novoCampo.localizacao || '',
-                observacoes: novoCampo.observacoes || '',
-              };
-              setCampos((prev) => [campoFormatado, ...prev]);
-              setCamposSubScreen(null);
-            }}
-          />
-        );
-      }
-
-      if (camposSubScreen === 'editar' && campoEmEdicao) {
-        return (
-          <EditarCamposScreen
-            campo={campoEmEdicao}
-            onBack={() => {
-              setCampoEmEdicao(null);
-              setCamposSubScreen(null);
-            }}
-            onGuardarAlteracoes={(campoAtualizado) => {
-              setCampos((prev) =>
-                prev.map((item) =>
-                  item.id === campoAtualizado.id ? campoAtualizado : item
-                )
-              );
-              if (selectedCampo?.id === campoAtualizado.id) {
-                setSelectedCampo(campoAtualizado);
-              }
-              setCampoEmEdicao(null);
-              setCamposSubScreen(null);
-            }}
-          />
-        );
-      }
-
-      if (camposSubScreen === 'eliminar' && campoEmEliminacao) {
-        return (
-          <EliminarCampoScreen
-            campo={campoEmEliminacao}
-            onCancel={() => {
-              setCampoEmEliminacao(null);
-              setCamposSubScreen(null);
-            }}
-            onConfirmDelete={(campoAlvo) => {
-              handleEliminarCampo(campoAlvo);
-              setCampoEmEliminacao(null);
-              setCamposSubScreen(null);
-            }}
-          />
-        );
-      }
-
-      if (selectedCampo) {
-        return (
-          <CampoDetalheScreen
-            campo={selectedCampo}
-            onBack={() => setSelectedCampo(null)}
-            onVerParcelasCampo={(campo) => {
-              setSelectedCampo(null);
-              setCampoFiltroParcelas(campo);
-              setActiveScreen('parcelas');
-            }}
-          />
-        );
-      }
-      return (
-        <CamposScreen
-          camposData={campos}
-          onSelectCampo={(campo) => setSelectedCampo(campo)}
-          onOpenCriarCampo={() => setCamposSubScreen('criar')}
-          onEditCampo={(campo) => {
-            setCampoEmEdicao(campo);
-            setCamposSubScreen('editar');
-          }}
-          onDeleteCampo={(campo) => {
-            setCampoEmEliminacao(campo);
-            setCamposSubScreen('eliminar');
-          }}
-        />
-      );
-    }
-
-    if (activeScreen === 'parcelas') {
-      if (parcelasSubScreen === 'criar') {
-        return (
-          <CriarParcelaScreen
-            camposOpcoes={nomesCamposDisponiveis}
-            campoInicial={campoFiltroParcelas?.nome || ''}
-            onBack={() => setParcelasSubScreen(null)}
-            onCriarParcela={handleCriarParcela}
-          />
-        );
-      }
-
-      if (parcelasSubScreen === 'criada' && parcelaRecemCriada) {
-        return (
-          <ParcelaCriadaScreen
-            parcela={parcelaRecemCriada}
-            onVerDetalhes={(parcelaCriada) => {
-              setParcelaRecemCriada(null);
-              setParcelasSubScreen(null);
-              setSelectedParcela(parcelaCriada);
-            }}
-            onVoltarParcelas={() => {
-              setParcelaRecemCriada(null);
-              setParcelasSubScreen(null);
-            }}
-          />
-        );
-      }
-
-      if (parcelasSubScreen === 'editar' && parcelaEmEdicao) {
-        return (
-          <EditarParcelaScreen
-            parcela={parcelaEmEdicao}
-            camposOpcoes={nomesCamposDisponiveis}
-            onBack={() => {
-              setParcelaEmEdicao(null);
-              setParcelasSubScreen(null);
-            }}
-            onGuardarAlteracoes={handleGuardarParcelaEditada}
-          />
-        );
-      }
-
-      if (parcelasSubScreen === 'eliminar' && parcelaEmEliminacao) {
-        return (
-          <EliminarParcelaScreen
-            parcela={parcelaEmEliminacao}
-            onCancel={() => {
-              setParcelaEmEliminacao(null);
-              setParcelasSubScreen(null);
-            }}
-            onConfirmDelete={handleConfirmarEliminarParcela}
-          />
-        );
-      }
-
-      return (
-        <ParcelasScreen
-          parcelasData={parcelas}
-          campoFiltro={campoFiltroParcelas}
-          onBackToCampo={() => {
-            const campoAtual = campoFiltroParcelas;
-            setCampoFiltroParcelas(null);
-            setActiveScreen('campos');
-            setSelectedCampo(campoAtual);
-          }}
-          onClearCampoFiltro={() => setCampoFiltroParcelas(null)}
-          onSelectParcela={(parcela) => setSelectedParcela(parcela)}
-          onOpenCriarParcela={() => setParcelasSubScreen('criar')}
-          onEditParcela={(parcela) => {
-            setParcelaEmEdicao(parcela);
-            setParcelasSubScreen('editar');
-          }}
-          onDeleteParcela={(parcela) => {
-            setParcelaEmEliminacao(parcela);
-            setParcelasSubScreen('eliminar');
-          }}
-          onQrParcela={(parcela) => setSelectedParcela(parcela)}
-        />
-      );
-    }
-
-    if (activeScreen === 'plantacoes') {
-      return (
-        <PlantacoesScreen
-          onSelectPlantacao={(plantacao) => {
-            setSelectedPlantacao(plantacao);
-          }}
-          onOpenCriarPlantacao={() => {}}
-        />
-      );
-    }
-
-    if (activeScreen === 'tarefas') {
-      return (
-        <TarefasScreen
-          onSelectTarefa={(tarefa) => {
-            setSelectedTarefa(tarefa);
-          }}
-          onOpenCriarTarefa={() => {}}
-        />
-      );
-    }
-
-    if (activeScreen === 'perfil') {
-      if (perfilSubScreen === 'registar_operador') {
-        return (
-          <RegistarOperadorScreen
-            quintaNome="Quinta do Vale"
-            perfilFixo="Operador"
-            onBack={() => setPerfilSubScreen('operadores')}
-            onRegistarOperador={handleAdicionarOperador}
-          />
-        );
-      }
-
-      if (perfilSubScreen === 'operadores') {
-        return (
-          <OperadoresScreen
-            quintaNome="Quinta do Vale"
-            operadoresData={operadores}
-            convitesData={convites}
-            totalOperadoresCount={operadores.length}
-            totalConvitesCount={convites.length}
-            onBack={() => setPerfilSubScreen(null)}
-            onSelectOperador={(operador) => setSelectedOperador(operador)}
-            onOpenAdicionarOperador={() =>
-              setPerfilSubScreen('registar_operador')
-            }
-          />
-        );
-      }
-
-      return (
-        <PerfilScreen
-          userName="Maria Costa"
-          roleText="Agricultora · Proprietária"
-          quintaNome="Quinta do Vale"
-          quintaDetalhe="Évora · 128,4 ha"
-          planoNome="Plano Profissional"
-          planoRenovacao="Renova a 14 out. 2026"
-          equipaResumo={totalUtilizadoresResumo}
-          onOpenOperadores={() => setPerfilSubScreen('operadores')}
-          onLogout={() => {
-            limparDetalhes();
-            setCampoFiltroParcelas(null);
-            setActiveScreen('inicio');
-            setIsAuthenticated(false);
-            setAuthScreen('login');
-          }}
-        />
-      );
-    }
-
-    return null;
+  const handleSelectTab = (tabKey) => {
+    resetSubNavegacao();
+    setActiveTab(tabKey);
   };
+
+  const handleSelectCampo = (campo) => {
+    setParcelaDetalhe(null);
+    setCampoFiltroParcelas(null);
+    setCampoSelecionado(campo);
+  };
+
+  const handleVerTodasParcelasDoCampo = () => {
+    setParcelaDetalhe(null);
+    setCampoFiltroParcelas(campoSelecionado);
+    setActiveTab('parcelas');
+  };
+
+  const handleAbrirDetalheParcela = (parcela) => {
+    setParcelaDetalhe(parcela);
+  };
+
+  const primeiroNome = (currentUser?.nomeCompleto || 'Maria Costa').split(' ')[0];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
-      <View style={styles.contentContainer}>
-        {renderMainContent()}
-      </View>
-      <BottomNav
-        activeTab={bottomNavActiveTab}
-        onSelectTab={(tab) => handleNavigate(tab)}
-      />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F4F6F3" />
+
+      {screenMode === 'register' ? (
+        <RegisterScreen
+          onBackToLogin={() => setScreenMode('login')}
+          onRegisterSuccess={handleRegisterSuccess}
+        />
+      ) : screenMode === 'login' ? (
+        <LoginScreen
+          onNavigateToRegister={() => setScreenMode('register')}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      ) : (
+        <View style={styles.appShell}>
+          <View style={styles.contentArea}>
+            {currentUser?.role === 'operador' && activeTab === 'tarefas' && (
+              <OperadorTarefasScreen
+                iniciais={primeiroNome === 'João' ? 'JS' : primeiroNome.slice(0, 2).toUpperCase()}
+                user={currentUser}
+                onOpenPerfil={() => setActiveTab('perfil')}
+                onContinuar={(tarefa) => {
+                  setOperadorTarefaAtiva(tarefa);
+                  setActiveTab('tarefaDetalhe');
+                }}
+                onSelectTarefa={(tarefa) => {
+                  setOperadorTarefaAtiva(tarefa);
+                  setActiveTab('tarefaDetalhe');
+                }}
+              />
+            )}
+
+            {currentUser?.role !== 'operador' && currentUser?.role !== 'administrador' && activeTab === 'tarefas' && (
+              mostrarCriarTarefa ? (
+                <CriarTarefaScreen
+                  onBack={() => {
+                    setMostrarCriarTarefa(false);
+                    setActiveTab(origemCriarTarefa);
+                  }}
+                  onTarefaCriada={(tarefa) => {
+                    console.log('Nova tarefa:', tarefa);
+                    setMostrarCriarTarefa(false);
+                    setActiveTab(origemCriarTarefa);
+                  }}
+                />
+              ) : (
+                <TarefasScreen
+                  onBack={() => setActiveTab('inicio')}
+                  onAdd={() => {
+                    setOrigemCriarTarefa('tarefas');
+                    setMostrarCriarTarefa(true);
+                  }}
+                />
+              )
+            )}
+
+            {currentUser?.role === 'operador' && activeTab === 'scanner' && (
+              <OperadorScannerScreen
+                onCodigo={(codigo) => {
+                  console.log('Código QR:', codigo);
+                  setActiveTab('mapa');
+                }}
+                onHistorico={() => setActiveTab('tarefas')}
+              />
+            )}
+
+            {currentUser?.role === 'operador' && activeTab === 'mapa' && (
+              <OperadorParcelaScreen
+                parcela={operadorParcelaAtiva || undefined}
+                onBack={() => setActiveTab('tarefas')}
+                onLerQR={() => setActiveTab('scanner')}
+                onNavegar={(tipo) => console.log('Navegar:', tipo)}
+                onContactar={() => console.log('Contactar responsável')}
+                onContinuar={() => setActiveTab('tarefas')}
+              />
+            )}
+
+            {currentUser?.role === 'operador' && activeTab === 'perfil' && (
+              <OperadorPerfilScreen
+                onItemPress={(item) => console.log(item.titulo)}
+                onSettings={() => console.log('Abrir definições do operador')}
+                user={currentUser}
+                onLogout={() => {
+                  resetSubNavegacao();
+                  setActiveTab('tarefas');
+                  setScreenMode('login');
+                }}
+              />
+            )}
+
+            {currentUser?.role === 'operador' && activeTab === 'tarefaDetalhe' && (
+              <OperadorTarefaDetalheScreen
+                tarefa={operadorTarefaAtiva}
+                onBack={() => setActiveTab('tarefas')}
+                onEstadoChange={(tarefa, estado) =>
+                  console.log('Estado da tarefa:', tarefa?.titulo, estado)
+                }
+                onAbrirMapa={() => setActiveTab('mapa')}
+                onLerQR={() => setActiveTab('scanner')}
+                onReportar={(tarefa, tipo, notas) =>
+                  console.log('Ocorrência:', tarefa?.titulo, tipo, notas)
+                }
+              />
+            )}
+
+            {/* ABA INÍCIO */}
+            {currentUser?.role !== 'administrador' && activeTab === 'inicio' && (
+              <HomeScreen
+                userName={primeiroNome}
+                empresaNome={currentUser?.empresa || 'Quinta do Vale'}
+                areaTotal="128,4 ha"
+                onNavigateTab={handleSelectTab}
+              />
+            )}
+
+            {/* ABA CAMPOS */}
+            {currentUser?.role !== 'administrador' && activeTab === 'campos' &&
+              (campoEmEdicao ? (
+                <EditarCamposScreen
+                  campo={campoEmEdicao}
+                  onBack={() => setCampoEmEdicao(null)}
+                  onGuardarAlteracoes={(campoAtualizado) => {
+                    setCampoEditado(campoAtualizado);
+                    setCampoEmEdicao(null);
+                  }}
+                />
+              ) : mostrarCriarCampo ? (
+                <CriarCamposScreen
+                  onBack={() => setMostrarCriarCampo(false)}
+                  onCampoCriado={(campo) => {
+                    setNovoCampo(campo);
+                    setMostrarCriarCampo(false);
+                  }}
+                />
+              ) : parcelaDetalhe ? (
+                <ParcelaDetalheScreen
+                  parcela={parcelaDetalhe}
+                  campoContexto={campoSelecionado}
+                  onBack={() => setParcelaDetalhe(null)}
+                  onCriarTarefa={() => {
+                    setOrigemCriarTarefa('campos');
+                    setActiveTab('tarefas');
+                    setMostrarCriarTarefa(true);
+                  }}
+                  onAbrirMapa={(p) =>
+                    console.log('Abrir mapa da parcela:', p?.codigo || p?.nome)
+                  }
+                  onVerHistorico={(p) =>
+                    console.log('Ver histórico da parcela:', p?.codigo || p?.nome)
+                  }
+                />
+              ) : campoSelecionado ? (
+                <CampoDetalheScreen
+                  campo={campoSelecionado}
+                  onBack={() => setCampoSelecionado(null)}
+                  onEditCampo={(campo) => console.log('Editar Campo:', campo.nome)}
+                  onDeleteCampo={() => setCampoSelecionado(null)}
+                  onVerTodasParcelas={handleVerTodasParcelasDoCampo}
+                  onSelectParcela={handleAbrirDetalheParcela}
+                />
+              ) : (
+                <CamposScreen
+                  onSelectCampo={handleSelectCampo}
+                  onOpenCriarCampo={() => setMostrarCriarCampo(true)}
+                  onEditCampo={(campo) => setCampoEmEdicao(campo)}
+                  novoCampo={novoCampo}
+                  campoEditado={campoEditado}
+                />
+              ))}
+
+            {/* ABA PARCELAS */}
+            {activeTab === 'parcelas' &&
+              (parcelaEmEdicao ? (
+                <EditarParcelaScreen
+                  parcela={{
+                    ...parcelaEmEdicao,
+                    nome: parcelaEmEdicao.nome || parcelaEmEdicao.titulo || parcelaEmEdicao.codigo,
+                    qrCode: parcelaEmEdicao.qrCode || parcelaEmEdicao.codigo,
+                  }}
+                  camposDisponiveis={[
+                    'Olival Norte',
+                    'Vinha do Poente',
+                    'Cereal Sul',
+                    'Horta Poente',
+                  ]}
+                  onBack={() => setParcelaEmEdicao(null)}
+                  onGuardarAlteracoes={(parcelaAtualizada) => {
+                    setParcelaEditada(parcelaAtualizada);
+                    setParcelaEmEdicao(null);
+                  }}
+                />
+              ) : mostrarCriarParcela ? (
+                <CriarParcelaScreen
+                  campoInicial={campoFiltroParcelas?.nome}
+                  camposDisponiveis={[
+                    'Olival Norte',
+                    'Vinha do Poente',
+                    'Cereal Sul',
+                    'Horta Poente',
+                  ]}
+                  onBack={() => setMostrarCriarParcela(false)}
+                  onParcelaCriada={(parcela) => {
+                    setNovoParcela(parcela);
+                    setMostrarCriarParcela(false);
+                  }}
+                />
+              ) : parcelaDetalhe ? (
+                <ParcelaDetalheScreen
+                  parcela={parcelaDetalhe}
+                  campoContexto={campoFiltroParcelas}
+                  onBack={() => setParcelaDetalhe(null)}
+                  onCriarTarefa={() => {
+                    setOrigemCriarTarefa('parcelas');
+                    setActiveTab('tarefas');
+                    setMostrarCriarTarefa(true);
+                  }}
+                  onAbrirMapa={(p) =>
+                    console.log('Abrir mapa da parcela:', p?.codigo || p?.nome)
+                  }
+                  onVerHistorico={(p) =>
+                    console.log('Ver histórico da parcela:', p?.codigo || p?.nome)
+                  }
+                />
+              ) : (
+                <ParcelasScreen
+                  campoFiltro={campoFiltroParcelas}
+                  onBackToCampo={() => {
+                    setCampoFiltroParcelas(null);
+                    setActiveTab('campos');
+                  }}
+                  onClearCampoFiltro={() => setCampoFiltroParcelas(null)}
+                  onSelectParcela={handleAbrirDetalheParcela}
+                  onOpenCriarParcela={() => setMostrarCriarParcela(true)}
+                  onEditParcela={(parcela) => setParcelaEmEdicao(parcela)}
+                  novaParcela={novoParcela}
+                  parcelaEditada={parcelaEditada}
+                />
+              ))}
+
+            {/* ABA PLANTAÇÕES */}
+            {activeTab === 'plantacoes' && (
+              mostrarCriarPlantacao ? (
+                <CriarPlantacaoScreen
+                  onBack={() => setMostrarCriarPlantacao(false)}
+                  onPlantacaoCriada={(plantacao) => {
+                    setNovaPlantacao(plantacao);
+                    setMostrarCriarPlantacao(false);
+                  }}
+                />
+              ) : (
+                <PlantacoesScreen
+                  onOpenCriarPlantacao={() => setMostrarCriarPlantacao(true)}
+                  novaPlantacao={novaPlantacao}
+                />
+              )
+            )}
+
+            {/* ABA PERFIL */}
+           {currentUser?.role !== 'operador' &&
+  currentUser?.role !== 'administrador' &&
+  activeTab === 'perfil' && (
+                  <PerfilScreen
+                    user={currentUser}
+                    onLogout={() => {
+                      resetSubNavegacao();
+                      setActiveTab('inicio');
+                      setScreenMode('login');
+                    }}
+                  />
+            )}
+
+            {/* ABA ADMIN - DASHBOARD */}
+            {currentUser?.role === 'admin' && activeTab === 'dashboard' && (
+              <AdminDashboardScreen
+                onSelectTab={setActiveTab}
+                onLogout={() => {
+                  resetSubNavegacao();
+                  setActiveTab('inicio');
+                  setScreenMode('login');
+                }}
+              />
+            )}
+
+            {/* ABA ADMIN - CAMPOS */}
+            {currentUser?.role === 'admin' && activeTab === 'adminCampos' && (
+              <AdminCamposScreen
+                onBack={() => setActiveTab('dashboard')}
+                onSelectCampo={(campo) => {
+                  setCampoSelecionado(campo);
+                  setActiveTab('adminCampoDetalhe');
+                }}
+                onOpenCriarCampo={() => setMostrarCriarCampo(true)}
+                onEditCampo={(campo) => setCampoEmEdicao(campo)}
+                novoCampo={novoCampo}
+                campoEditado={campoEditado}
+              />
+            )}
+
+            {/* ABA ADMIN - EMPRESAS */}
+            {currentUser?.role === 'admin' && activeTab === 'adminEmpresas' && (
+              <AdminEmpresasScreen
+                onBack={() => setActiveTab('dashboard')}
+                onSelectEmpresa={(empresa) => console.log('Selecionar empresa:', empresa)}
+                onOpenCriarEmpresa={() => console.log('Abrir Criar Empresa')}
+                onEditEmpresa={(empresa) => console.log('Editar Empresa:', empresa)}
+              />
+            )}
+
+            {/* ABA ADMIN - UTILIZADORES */}
+            {currentUser?.role === 'admin' && activeTab === 'adminUtilizadores' && (
+              <AdminUtilizadoresScreen
+                onBack={() => setActiveTab('dashboard')}
+                onSelectUtilizador={(utilizador) => console.log('Selecionar utilizador:', utilizador)}
+                onOpenCriarUtilizador={() => console.log('Abrir Criar Utilizador')}
+                onEditUtilizador={(utilizador) => console.log('Editar Utilizador:', utilizador)}
+              />
+            )}
+
+            {/* ABA ADMIN - DETALHE PARCELA */}
+            {currentUser?.role === 'admin' && activeTab === 'adminCampoDetalhe' && (
+              <AdminParcelaDetalheScreen
+                parcela={parcelaDetalhe}
+                onBack={() => setActiveTab('adminCampos')}
+                onEditParcela={(parcela) => console.log('Editar Parcela:', parcela.codigo)}
+                onDeleteParcela={() => setParcelaDetalhe(null)}
+              />
+            )}
+
+            {/* ECRÃS ADMINISTRADOR */}
+            {currentUser?.role === 'administrador' && (activeTab === 'resumo' || activeTab === 'inicio') && (
+              <AdminDashboardScreen
+                iniciais="ADM"
+                onVerRelatorio={() => setActiveTab('empresas')}
+                onOpenPerfil={() => setActiveTab('perfil')}
+                onSelectEstado={(estado) => console.log('Estado da rede:', estado)}
+              />
+            )}
+
+            {currentUser?.role === 'administrador' && activeTab === 'campos' && (
+              adminParcelaAtiva ? (
+                <AdminParcelaDetalheScreen
+                  parcela={{
+                    nome: adminParcelaAtiva.nome,
+                    subtitulo: adminParcelaAtiva.sub,
+                    qr: 'QR-' + (adminParcelaAtiva.id || 'campo'),
+                    alerta: adminParcelaAtiva.nota,
+                  }}
+                  onBack={() => setAdminParcelaAtiva(null)}
+                  onAbrirMapa={() => console.log('Abrir mapa:', adminParcelaAtiva.nome)}
+                  onHistorico={() => console.log('Ver histórico:', adminParcelaAtiva.nome)}
+                  onMais={() => console.log('Mais opções:', adminParcelaAtiva.nome)}
+                />
+              ) : (
+                <AdminCamposScreen
+                  onSelectCampo={(campo) => setAdminParcelaAtiva(campo)}
+                  onExportar={() => console.log('Exportar campos')}
+                  onVerTodos={() => console.log('Ver todos os campos')}
+                />
+              )
+            )}
+
+            {currentUser?.role === 'administrador' && activeTab === 'empresas' && (
+              <AdminEmpresasScreen
+                onAdicionar={() => console.log('Adicionar empresa')}
+                onSelectEmpresa={(empresa) => {
+                  console.log('Empresa selecionada:', empresa.nome);
+                  setActiveTab('campos');
+                }}
+              />
+            )}
+
+            {currentUser?.role === 'administrador' && activeTab === 'utilizadores' && (
+              <AdminUtilizadoresScreen
+                onConvidar={() => console.log('Convidar utilizador')}
+                onSelectUtilizador={(utilizador) =>
+                  console.log('Utilizador selecionado:', utilizador.nome)
+                }
+              />
+            )}
+
+            {/* ABA ADMIN - PERFIL */}
+            {currentUser?.role === 'administrador' && activeTab === 'perfil' && (
+              <AdminPerfilScreen
+                user={currentUser}
+                onSettings={() => console.log('Abrir definições do administrador')}
+                onLogout={() => {
+                  resetSubNavegacao();
+                  setActiveTab('resumo');
+                  setScreenMode('login');
+                }}
+              />
+            )}
+          </View>
+
+          <BottomNav
+            activeTab={activeTab}
+            onSelectTab={handleSelectTab}
+            role={currentUser?.role}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: '#F4F6F3',
   },
-  contentContainer: {
+  appShell: {
     flex: 1,
     backgroundColor: '#F4F6F3',
+  },
+  contentArea: {
+    flex: 1,
+  },
+  placeholderBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  placeholderTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1E2923',
+    marginBottom: 6,
+  },
+  placeholderSub: {
+    fontSize: 13,
+    color: '#6B7871',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  switchBtn: {
+    backgroundColor: '#1B3B2B',
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 14,
+  },
+  switchBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

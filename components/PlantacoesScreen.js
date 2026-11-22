@@ -1,5 +1,5 @@
 // components/PlantacoesScreen.js
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,218 +7,187 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import PlantacaoCard from './ui/PlantacaoCard';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-const PLANTACOES_DADOS = [
+const PLANTACOES_DATA = [
   {
-    id: 'pl-1',
-    estadoFiltro: 'ativas',
-    tipo: 'olival',
-    nome: 'Oliveira',
+    id: '1',
+    cultura: 'Oliveira',
     variedade: 'Galega · Cobrançosa',
-    area: 52.4,
+    area: '52,4 ha',
     fase: 'Fruto em crescimento',
-    progresso: 68,
+    progresso: '68%',
+    progressoNum: 68,
     dataInicio: '03-06-2026',
     dataFim: '03-12-2026',
+    categoria: 'Ativas 4',
+    iconName: 'pine-tree',
   },
   {
-    id: 'pl-2',
-    estadoFiltro: 'ativas',
-    tipo: 'vinha',
-    nome: 'Vinha',
+    id: '2',
+    cultura: 'Vinha',
     variedade: 'Touriga Nacional',
-    area: 18.6,
+    area: '18,6 ha',
     fase: 'Pintor',
-    progresso: 81,
+    progresso: '81%',
+    progressoNum: 81,
     dataInicio: '1-11-2025',
     dataFim: '01-11-2026',
+    categoria: 'Ativas 4',
+    iconName: 'fruit-grapes-outline',
   },
   {
-    id: 'pl-3',
-    estadoFiltro: 'ativas',
-    tipo: 'cereal',
-    nome: 'Trigo duro',
+    id: '3',
+    cultura: 'Trigo duro',
     variedade: 'Antequera',
-    area: 31.2,
+    area: '31,2 ha',
     fase: 'Maturação',
-    progresso: 74,
+    progresso: '91%',
+    progressoNum: 91,
     dataInicio: '25-10-2026',
     dataFim: '25-06-2027',
+    categoria: 'Ativas 4',
+    iconName: 'barley',
   },
   {
-    id: 'pl-4',
-    estadoFiltro: 'ativas',
-    tipo: 'horta',
-    nome: 'Horta de Verão',
-    variedade: 'Tomate · Pimento',
-    area: 2.8,
-    fase: 'Desenvolvimento vegetativo',
-    progresso: 54,
-    dataInicio: '15-04-2026',
-    dataFim: '20-09-2026',
-  },
-  {
-    id: 'pl-5',
-    estadoFiltro: 'planeadas',
-    tipo: 'olival',
-    nome: 'Olival Encosta',
-    variedade: 'Arbequina',
-    area: 14.0,
+    id: '4',
+    cultura: 'Tomate indústria',
+    variedade: 'Heinz 1015',
+    area: '2,8 ha',
     fase: 'Preparação de solo',
-    progresso: 20,
-    dataInicio: '10-01-2027',
-    dataFim: '15-11-2027',
-  },
-  {
-    id: 'pl-6',
-    estadoFiltro: 'planeadas',
-    tipo: 'cereal',
-    nome: 'Cevada Norte',
-    variedade: 'Scarlett',
-    area: 9.5,
-    fase: 'Planeamento de sementeira',
-    progresso: 10,
-    dataInicio: '05-02-2027',
-    dataFim: '20-07-2027',
-  },
-  {
-    id: 'pl-7',
-    estadoFiltro: 'historico',
-    tipo: 'vinha',
-    nome: 'Vinha Velha',
-    variedade: 'Tinta Roriz',
-    area: 11.2,
-    fase: 'Campanha concluída',
-    progresso: 100,
-    dataInicio: '01-11-2024',
-    dataFim: '30-10-2025',
+    progresso: '15%',
+    progressoNum: 15,
+    dataInicio: '15-03-2027',
+    dataFim: '20-08-2027',
+    categoria: 'Planeadas 2',
+    iconName: 'sprout-outline',
   },
 ];
 
-const FILTROS = [
-  { key: 'ativas', label: 'Ativas 4' },
-  { key: 'planeadas', label: 'Planeadas 2' },
-  { key: 'historico', label: 'Histórico' },
-];
+export default function PlantacoesScreen({ onOpenCriarPlantacao, novaPlantacao }) {
+  const [activeFilter, setActiveFilter] = useState('Ativas 4');
+  const [plantacoes, setPlantacoes] = useState(PLANTACOES_DATA);
 
-export default function PlantacoesScreen({
-  onSelectPlantacao,
-  onOpenCriarPlantacao,
-}) {
-  const [filtroAtivo, setFiltroAtivo] = useState('ativas');
+  const filtros = ['Ativas 4', 'Planeadas 2', 'Histórico'];
 
-  const plantacoesVisiveis = useMemo(
-    () => PLANTACOES_DADOS.filter((item) => item.estadoFiltro === filtroAtivo),
-    [filtroAtivo]
-  );
+  useEffect(() => {
+    if (!novaPlantacao) return;
+    setPlantacoes((listaAnterior) => [novaPlantacao, ...listaAnterior]);
+  }, [novaPlantacao]);
 
-  const areaProducaoTexto =
-    filtroAtivo === 'ativas'
-      ? '105,0 ha'
-      : `${plantacoesVisiveis
-          .reduce((acc, item) => acc + (Number(item.area) || 0), 0)
-          .toLocaleString('pt-PT', {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-          })} ha`;
+  const listaFiltrada = plantacoes.filter((item) => {
+    if (activeFilter === 'Histórico') return false;
+    return item.categoria === activeFilter;
+  });
 
   return (
-    <ScrollView
-      style={styles.scrollView}
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Cabeçalho */}
       <View style={styles.headerRow}>
-        <View style={styles.headerTextCol}>
+        <View>
           <Text style={styles.title}>Plantações</Text>
           <Text style={styles.subtitle}>Campanha 2026 · 4 culturas</Text>
         </View>
-
         <TouchableOpacity
-          style={styles.addBtn}
-          activeOpacity={0.85}
-          delayPressIn={0}
+          style={styles.addButton}
           onPress={() => onOpenCriarPlantacao && onOpenCriarPlantacao()}
+          activeOpacity={0.85}
         >
-          <Ionicons name="add" size={22} color="#1E2923" />
+          <Ionicons name="add" size={24} color="#1E2923" />
         </TouchableOpacity>
       </View>
 
-      {/* Cartão escuro Área em produção + Próxima colheita */}
+      {/* Cartão Verde Escuro: Área em produção */}
       <View style={styles.heroCard}>
-        <View style={styles.heroLeft}>
+        <View>
           <Text style={styles.heroLabel}>Área em produção</Text>
-          <Text style={styles.heroValue}>{areaProducaoTexto}</Text>
+          <Text style={styles.heroValue}>105,0 ha</Text>
         </View>
 
         <View style={styles.harvestBox}>
           <Text style={styles.harvestLabel}>Próxima colheita</Text>
-          <Text style={styles.harvestValue}>12 dias</Text>
+          <Text style={styles.harvestDays}>12 dias</Text>
         </View>
       </View>
 
-      {/* Chips Ativas 4 / Planeadas 2 / Histórico */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsRow}
-      >
-        {FILTROS.map((filtro) => {
-          const ativa = filtroAtivo === filtro.key;
+      {/* Filtros (Ativas 4, Planeadas 2, Histórico) */}
+      <View style={styles.filtersRow}>
+        {filtros.map((filtro) => {
+          const isActive = activeFilter === filtro;
           return (
             <TouchableOpacity
-              key={filtro.key}
-              style={[styles.chip, ativa && styles.chipActive]}
-              activeOpacity={0.8}
-              delayPressIn={0}
-              onPress={() => setFiltroAtivo(filtro.key)}
+              key={filtro}
+              style={[styles.filterPill, isActive && styles.filterPillActive]}
+              onPress={() => setActiveFilter(filtro)}
             >
-              <Text style={[styles.chipText, ativa && styles.chipTextActive]}>
-                {filtro.label}
+              <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+                {filtro}
               </Text>
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
 
-      {/* Lista de PlantacaoCard */}
-      {plantacoesVisiveis.map((plantacao) => (
-        <PlantacaoCard
-          key={plantacao.id}
-          plantacao={plantacao}
-          onPress={(item) => onSelectPlantacao && onSelectPlantacao(item)}
-        />
-      ))}
+      {/* Lista de Cartões de Plantações */}
+      {listaFiltrada.length > 0 ? (
+        listaFiltrada.map((item) => (
+          <View key={item.id} style={styles.plantCard}>
+            {/* Linha Superior: Ícone + Nome/Variedade + Hectares */}
+            <View style={styles.cardTopRow}>
+              <View style={styles.iconBox}>
+                <MaterialCommunityIcons name={item.iconName} size={24} color="#1B3B2B" />
+              </View>
+
+              <View style={styles.culturaInfo}>
+                <Text style={styles.culturaTitle}>{item.cultura}</Text>
+                <Text style={styles.culturaSub}>{item.variedade}</Text>
+              </View>
+
+              <Text style={styles.areaText}>{item.area}</Text>
+            </View>
+
+            {/* Fase e Percentagem */}
+            <View style={styles.phaseRow}>
+              <Text style={styles.phaseText}>{item.fase}</Text>
+              <Text style={styles.percentText}>{item.progresso}</Text>
+            </View>
+
+            {/* Datas de Início e Fim */}
+            <View style={styles.datesRow}>
+              <Text style={styles.dateText}>{item.dataInicio}</Text>
+              <Text style={styles.dateText}>{item.dataFim}</Text>
+            </View>
+
+            {/* Barra de Progresso */}
+            <View style={styles.progressBg}>
+              <View style={[styles.progressFill, { width: `${item.progressoNum}%` }]} />
+            </View>
+          </View>
+        ))
+      ) : (
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyText}>Sem registos no histórico desta campanha.</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    backgroundColor: '#F4F6F3',
-  },
   container: {
-    flexGrow: 1,
     padding: 20,
-    paddingTop: 14,
-    paddingBottom: 28,
+    paddingTop: 16,
+    paddingBottom: 30,
     backgroundColor: '#F4F6F3',
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  headerTextCol: {
-    flex: 1,
-    marginRight: 12,
+    alignItems: 'center',
+    marginBottom: 18,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
     color: '#1E2923',
   },
@@ -227,81 +196,164 @@ const styles = StyleSheet.create({
     color: '#6B7871',
     marginTop: 2,
   },
-  addBtn: {
+  addButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E9E6',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
   },
   heroCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#1B3B2B',
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    marginBottom: 16,
-    gap: 12,
-  },
-  heroLeft: {
-    flex: 1,
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 18,
   },
   heroLabel: {
-    fontSize: 13,
-    color: '#C8D8CE',
-    marginBottom: 4,
+    fontSize: 12,
+    color: '#B8C7BE',
+    marginBottom: 6,
   },
   heroValue: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: '800',
     color: '#FFFFFF',
-    lineHeight: 36,
   },
   harvestBox: {
-    backgroundColor: '#254837',
-    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 14,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    alignItems: 'flex-start',
+    paddingVertical: 10,
   },
   harvestLabel: {
-    fontSize: 11.5,
-    color: '#C8D8CE',
-    marginBottom: 3,
+    fontSize: 11,
+    color: '#B8C7BE',
+    marginBottom: 4,
   },
-  harvestValue: {
-    fontSize: 18,
+  harvestDays: {
+    fontSize: 15,
     fontWeight: '800',
-    color: '#E59A4C',
+    color: '#E09F3E',
   },
-  chipsRow: {
+  filtersRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 18,
   },
-  chip: {
+  filterPill: {
     paddingHorizontal: 16,
-    paddingVertical: 9,
+    paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E9E6',
   },
-  chipActive: {
+  filterPillActive: {
     backgroundColor: '#1B3B2B',
     borderColor: '#1B3B2B',
   },
-  chipText: {
+  filterText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#244735',
+    fontWeight: '600',
+    color: '#4B5751',
   },
-  chipTextActive: {
+  filterTextActive: {
     color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  plantCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  cardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  iconBox: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: '#E3ECE6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  culturaInfo: {
+    flex: 1,
+  },
+  culturaTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E2923',
+  },
+  culturaSub: {
+    fontSize: 12,
+    color: '#6B7871',
+    marginTop: 2,
+  },
+  areaText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E2923',
+  },
+  phaseRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  phaseText: {
+    fontSize: 12,
+    color: '#6B7871',
+  },
+  percentText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#2D6A4F',
+  },
+  datesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#6B7871',
+  },
+  progressBg: {
+    height: 7,
+    backgroundColor: '#E5E9E6',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#1B3B2B',
+    borderRadius: 4,
+  },
+  emptyBox: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#6B7871',
   },
 });

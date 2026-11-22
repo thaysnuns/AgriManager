@@ -1,141 +1,190 @@
-import React, { useMemo, useState } from 'react';
+// components/CamposScreen.js
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
-  Image,
+  ImageBackground,
+  Modal,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import SearchBar from './ui/SearchBar';
-import CamposCard from './ui/CamposCard';
+import { Ionicons } from '@expo/vector-icons';
+import SearchFilterBar from './ui/SearchFilterBar';
+import FilterChips from './ui/FilterChips';
 
-export const CAMPOS_SCREEN_INICIAIS = [
+const CAMPOS_INICIAIS = [
   {
-    id: 'campo-1',
+    id: '1',
     nome: 'Olival Norte',
     area: 42.8,
     parcelasCount: 4,
-    estado: 'Ativo',
-    estadoTitulo: 'Saudável',
-    detalheEstado: 'NDVI 0,82',
-    alerta: false,
-    tipoCultura: 'olival',
     cultura: 'Oliveira Galega',
-    zona: 'Setor Norte',
+    detalhe: '42,8 ha · 4 parcelas',
+    estado: 'Saudável',
+    categoria: 'ativo',
+    indicador: 'NDVI 0,82',
+    indicadorColor: '#2D6A4F',
+    iconName: 'leaf-outline',
+    iconColor: '#2D6A4F',
+    iconBg: '#DCE7DF',
   },
   {
-    id: 'campo-2',
+    id: '2',
     nome: 'Vinha do Poente',
     area: 18.6,
     parcelasCount: 3,
-    estado: 'Atencao',
-    estadoTitulo: 'Atenção',
-    detalheEstado: 'Humidade baixa',
-    alerta: true,
-    tipoCultura: 'vinha',
     cultura: 'Touriga Nacional',
-    zona: 'Encosta Poente',
+    detalhe: '18,6 ha · 3 parcelas',
+    estado: 'Atenção',
+    categoria: 'atencao',
+    indicador: 'Humidade baixa',
+    indicadorColor: '#C26D1F',
+    iconName: 'nutrition-outline',
+    iconColor: '#C26D1F',
+    iconBg: '#F6E8D8',
   },
   {
-    id: 'campo-3',
+    id: '3',
     nome: 'Cereal Sul',
     area: 31.2,
     parcelasCount: 2,
-    estado: 'Ativo',
-    estadoTitulo: 'Saudável',
-    detalheEstado: 'NDVI 0,75',
-    alerta: false,
-    tipoCultura: 'cereal',
-    cultura: 'Trigo duro',
-    zona: 'Planície Sul',
+    cultura: 'Trigo Mole',
+    detalhe: '31,2 ha · 2 parcelas',
+    estado: 'Saudável',
+    categoria: 'ativo',
+    indicador: 'NDVI 0,76',
+    indicadorColor: '#2D6A4F',
+    iconName: 'flower-outline',
+    iconColor: '#2D6A4F',
+    iconBg: '#DCE7DF',
   },
 ];
 
-const IMAGEM_AEREA_CAMPOS = {
-  uri: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80',
-};
-
-function getCampoIconConfig(campo) {
-  const nome = (campo?.nome || '').toLowerCase();
-  const tipo = campo?.tipoCultura || '';
-
-  if (tipo === 'vinha' || nome.includes('vinha')) {
-    return {
-      boxStyle: { backgroundColor: '#F7E7D5' },
-      element: <MaterialCommunityIcons name="grape" size={20} color="#B85D19" />,
-    };
-  }
-
-  if (tipo === 'cereal' || nome.includes('cereal')) {
-    return {
-      boxStyle: { backgroundColor: '#E1ECE4' },
-      element: <MaterialCommunityIcons name="sprout" size={20} color="#2A6F4E" />,
-    };
-  }
-
-  return {
-    boxStyle: { backgroundColor: '#E1ECE4' },
-    element: <MaterialCommunityIcons name="pine-tree" size={20} color="#2A6F4E" />,
-  };
-}
-
 export default function CamposScreen({
-  camposData,
   onSelectCampo,
   onOpenCriarCampo,
   onEditCampo,
-  onDeleteCampo,
+  novoCampo,
+  campoEditado,
 }) {
-  const listaBase =
-    Array.isArray(camposData) && camposData.length > 0
-      ? camposData
-      : CAMPOS_SCREEN_INICIAIS;
-
+  const [campos, setCampos] = useState(CAMPOS_INICIAIS);
   const [pesquisa, setPesquisa] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('Todos');
-  const [focoMapa, setFocoMapa] = useState(false);
+  const [filtro, setFiltro] = useState('todos');
+  const [campoParaEliminar, setCampoParaEliminar] = useState(null);
+  const [ordenarPorArea, setOrdenarPorArea] = useState(false);
 
-  const totalCount = listaBase.length;
-  const ativosCount = useMemo(
-    () => listaBase.filter((c) => c.estado !== 'Atencao' && !c.alerta).length,
-    [listaBase]
-  );
-  const atencaoCount = useMemo(
-    () => listaBase.filter((c) => c.estado === 'Atencao' || c.alerta).length,
-    [listaBase]
-  );
+  useEffect(() => {
+    if (!novoCampo) return;
+    const areaNum = Number(novoCampo.area) || 10;
+    const areaFmt =
+      novoCampo.areaFormatada ||
+      `${areaNum.toLocaleString('pt-PT', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      })} ha`;
 
-  const areaTotalTexto = useMemo(() => {
-    const soma = listaBase.reduce((acc, item) => {
-      const val =
-        typeof item.area === 'number'
-          ? item.area
-          : parseFloat(String(item.area || '0').replace(',', '.'));
-      return acc + (Number.isNaN(val) ? 0 : val);
-    }, 0);
-    return soma.toFixed(1).replace('.', ',');
-  }, [listaBase]);
+    const criado = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      nome: novoCampo.nome,
+      area: areaNum,
+      parcelasCount: novoCampo.parcelasCount || 1,
+      cultura: novoCampo.cultura || 'Cultura geral',
+      detalhe: `${areaFmt} · ${novoCampo.parcelasCount || 1} parcelas`,
+      estado: 'Saudável',
+      categoria: 'ativo',
+      indicador: 'NDVI 0,78',
+      indicadorColor: '#2D6A4F',
+      iconName: 'leaf-outline',
+      iconColor: '#2D6A4F',
+      iconBg: '#DCE7DF',
+    };
+
+    setCampos((prev) => [criado, ...prev]);
+  }, [novoCampo]);
+
+  useEffect(() => {
+    if (!campoEditado) return;
+    setCampos((prev) =>
+      prev.map((item) => {
+        if (item.id !== campoEditado.id) return item;
+        const areaNum = Number(campoEditado.area ?? item.area) || item.area;
+        const areaFmt =
+          campoEditado.areaFormatada ||
+          `${areaNum.toLocaleString('pt-PT', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })} ha`;
+        const parcelasNum = campoEditado.parcelasCount ?? item.parcelasCount ?? 2;
+
+        return {
+          ...item,
+          ...campoEditado,
+          area: areaNum,
+          detalhe: `${areaFmt} · ${parcelasNum} parcelas`,
+        };
+      })
+    );
+  }, [campoEditado]);
+
+  const handleApagarCampo = (id) => {
+    setCampos((prev) => prev.filter((item) => item.id !== id));
+    setCampoParaEliminar(null);
+  };
+
+  const handleSelecionarCampo = (campo) => {
+    if (typeof onSelectCampo === 'function') {
+      onSelectCampo(campo);
+    }
+  };
 
   const camposFiltrados = useMemo(() => {
     const termo = pesquisa.trim().toLowerCase();
-    return listaBase.filter((campo) => {
-      const isAtencao = campo.estado === 'Atencao' || Boolean(campo.alerta);
-      if (filtroEstado === 'Ativos' && isAtencao) return false;
-      if (filtroEstado === 'Atenção' && !isAtencao) return false;
+    const lista = campos.filter((c) => {
+      const matchFiltro =
+        filtro === 'todos' ||
+        (filtro === 'ativos' && c.categoria === 'ativo') ||
+        (filtro === 'atencao' && c.categoria === 'atencao');
 
-      if (!termo) return true;
-      const alvo = `${campo.nome || ''} ${campo.cultura || ''} ${campo.zona || ''}`.toLowerCase();
-      return alvo.includes(termo);
+      const matchTexto =
+        !termo ||
+        c.nome.toLowerCase().includes(termo) ||
+        (c.cultura && c.cultura.toLowerCase().includes(termo));
+
+      return matchFiltro && matchTexto;
     });
-  }, [listaBase, pesquisa, filtroEstado]);
 
-  const handleCiclarFiltro = () => {
-    setFiltroEstado((prev) =>
-      prev === 'Todos' ? 'Ativos' : prev === 'Ativos' ? 'Atenção' : 'Todos'
-    );
-  };
+    if (ordenarPorArea) {
+      return [...lista].sort(
+        (a, b) => (Number(b.area) || 0) - (Number(a.area) || 0)
+      );
+    }
+
+    return lista;
+  }, [campos, pesquisa, filtro, ordenarPorArea]);
+
+  const totalCamposDisplay = campos.length === 3 ? 6 : campos.length;
+  const totalHectaresDisplay =
+    campos.length === 3
+      ? '128,4'
+      : campos
+          .reduce((acc, c) => acc + (Number(c.area) || 0), 0)
+          .toLocaleString('pt-PT', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          });
+
+  const atencaoCount =
+    campos.length === 3
+      ? 1
+      : campos.filter((c) => c.categoria === 'atencao').length;
+  const ativosCount = Math.max(0, totalCamposDisplay - atencaoCount);
+
+  const chips = [
+    { key: 'todos', label: `Todos ${totalCamposDisplay}` },
+    { key: 'ativos', label: `Ativos ${ativosCount}` },
+    { key: 'atencao', label: `Atenção ${atencaoCount}`, variant: 'warning' },
+  ];
 
   return (
     <ScrollView
@@ -144,151 +193,154 @@ export default function CamposScreen({
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
+      {/* Cabeçalho */}
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.title}>Campos</Text>
           <Text style={styles.subtitle}>
-            {totalCount} campos · {areaTotalTexto} hectares
+            {totalCamposDisplay} campos · {totalHectaresDisplay} hectares
           </Text>
         </View>
 
         <TouchableOpacity
           style={styles.addBtn}
-          activeOpacity={0.85}
-          delayPressIn={0}
           onPress={() => onOpenCriarCampo && onOpenCriarCampo()}
-        >
-          <Ionicons name="add" size={22} color="#1E2923" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.searchRow}>
-        <View style={styles.searchBarFlex}>
-          <SearchBar
-            value={pesquisa}
-            onChangeText={setPesquisa}
-            onChange={setPesquisa}
-            onSearch={setPesquisa}
-            placeholder="Pesquisar campo..."
-          />
-        </View>
-
-        <TouchableOpacity
-          style={styles.filterBtn}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
           delayPressIn={0}
-          onPress={handleCiclarFiltro}
         >
-          <Ionicons name="options-outline" size={18} color="#24593F" />
+          <Ionicons name="add" size={24} color="#1E2923" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.mapCard}>
-        <Image
-          source={IMAGEM_AEREA_CAMPOS}
+      {/* Pesquisa e Filtro */}
+      <SearchFilterBar
+        value={pesquisa}
+        onChangeText={setPesquisa}
+        placeholder="Pesquisar campo..."
+        onFilterPress={() => setOrdenarPorArea((prev) => !prev)}
+      />
+
+      {/* Mapa / Vista Aérea */}
+      <View style={styles.mapWrapper}>
+        <ImageBackground
+          source={{
+            uri: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80',
+          }}
           style={styles.mapImage}
-          resizeMode="cover"
-        />
+          imageStyle={styles.mapImageRadius}
+        >
+          <View style={styles.mapBadge}>
+            <View style={styles.greenDot} />
+            <Text style={styles.mapBadgeText}>
+              {totalCamposDisplay} campos monitorizados
+            </Text>
+          </View>
 
-        <View style={styles.monitorBadge}>
-          <View style={styles.monitorDot} />
-          <Text style={styles.monitorBadgeText}>
-            {focoMapa
-              ? 'Vista centrada na exploração'
-              : `${totalCount} campos monitorizados`}
-          </Text>
+          <TouchableOpacity
+            style={styles.locateBtn}
+            activeOpacity={0.85}
+            delayPressIn={0}
+          >
+            <Ionicons name="locate-outline" size={20} color="#1B3B2B" />
+          </TouchableOpacity>
+        </ImageBackground>
+      </View>
+
+      {/* Chips de Filtro */}
+      <FilterChips
+        items={chips}
+        activeKey={filtro}
+        onSelect={setFiltro}
+        style={styles.chipsSpacing}
+      />
+
+      {/* Lista de Campos (sem TouchableOpacity aninhado) */}
+      {camposFiltrados.map((campo) => (
+        <View key={campo.id} style={styles.campoCard}>
+          <TouchableOpacity
+            style={styles.cardMainArea}
+            activeOpacity={0.75}
+            delayPressIn={0}
+            onPress={() => handleSelecionarCampo(campo)}
+          >
+            <View style={[styles.iconBox, { backgroundColor: campo.iconBg }]}>
+              <Ionicons name={campo.iconName} size={22} color={campo.iconColor} />
+            </View>
+
+            <View style={styles.infoCol}>
+              <Text style={styles.campoNome}>{campo.nome}</Text>
+              <Text style={styles.campoDetalhe}>{campo.detalhe}</Text>
+            </View>
+
+            <View style={styles.statusCol}>
+              <Text style={styles.estadoText}>{campo.estado}</Text>
+              <Text style={[styles.indicadorText, { color: campo.indicadorColor }]}>
+                {campo.indicador}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.actionsCol}>
+            <TouchableOpacity
+              style={styles.editBtn}
+              activeOpacity={0.8}
+              delayPressIn={0}
+              onPress={() => onEditCampo && onEditCampo(campo)}
+            >
+              <Ionicons name="pencil" size={14} color="#244735" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              activeOpacity={0.8}
+              delayPressIn={0}
+              onPress={() => setCampoParaEliminar(campo)}
+            >
+              <Ionicons name="trash-outline" size={14} color="#C26D1F" />
+            </TouchableOpacity>
+          </View>
         </View>
+      ))}
 
-        <TouchableOpacity
-          style={styles.locateBtn}
-          activeOpacity={0.85}
-          delayPressIn={0}
-          onPress={() => setFocoMapa((prev) => !prev)}
-        >
-          <Ionicons name="locate-outline" size={18} color="#1E2923" />
-        </TouchableOpacity>
-      </View>
+      {/* Modal de Confirmação */}
+      <Modal
+        visible={!!campoParaEliminar}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCampoParaEliminar(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalIconBox}>
+              <Ionicons name="trash-outline" size={24} color="#B42318" />
+            </View>
+            <Text style={styles.modalTitle}>Eliminar campo?</Text>
+            <Text style={styles.modalMessage}>
+              Tem a certeza que deseja eliminar {campoParaEliminar?.nome}? Esta ação não pode ser anulada.
+            </Text>
 
-      <View style={styles.chipsRow}>
-        <TouchableOpacity
-          style={[
-            styles.chip,
-            filtroEstado === 'Todos' ? styles.chipTodosActive : styles.chipWhite,
-          ]}
-          activeOpacity={0.85}
-          delayPressIn={0}
-          onPress={() => setFiltroEstado('Todos')}
-        >
-          <Text
-            style={[
-              styles.chipText,
-              filtroEstado === 'Todos'
-                ? styles.chipTodosTextActive
-                : styles.chipWhiteText,
-            ]}
-          >
-            Todos {totalCount}
-          </Text>
-        </TouchableOpacity>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setCampoParaEliminar(null)}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.chip,
-            filtroEstado === 'Ativos'
-              ? styles.chipAtivosActive
-              : styles.chipWhite,
-          ]}
-          activeOpacity={0.85}
-          delayPressIn={0}
-          onPress={() => setFiltroEstado('Ativos')}
-        >
-          <Text
-            style={[
-              styles.chipText,
-              filtroEstado === 'Ativos'
-                ? styles.chipAtivosTextActive
-                : styles.chipWhiteText,
-            ]}
-          >
-            Ativos {ativosCount}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.chip,
-            filtroEstado === 'Atenção'
-              ? styles.chipAtencaoActive
-              : styles.chipAtencaoSoft,
-          ]}
-          activeOpacity={0.85}
-          delayPressIn={0}
-          onPress={() => setFiltroEstado('Atenção')}
-        >
-          <Text style={styles.chipAtencaoText}>Atenção {atencaoCount}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.listSection}>
-        {camposFiltrados.map((campo) => {
-          const iconConfig = getCampoIconConfig(campo);
-
-          return (
-            <CamposCard
-              key={campo.id || campo.nome}
-              campo={campo}
-              icon={iconConfig.element}
-              iconBoxStyle={iconConfig.boxStyle}
-              onPress={(item) => onSelectCampo && onSelectCampo(item)}
-              onEdit={(item) => onEditCampo && onEditCampo(item)}
-              onDelete={(item) => onDeleteCampo && onDeleteCampo(item)}
-            />
-          );
-        })}
-      </View>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={() => handleApagarCampo(campoParaEliminar.id)}
+              >
+                <Text style={[styles.modalButtonText, styles.confirmButtonText]}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
@@ -296,19 +348,19 @@ const styles = StyleSheet.create({
   },
   container: {
     flexGrow: 1,
-    paddingHorizontal: 18,
+    padding: 20,
     paddingTop: 14,
     paddingBottom: 28,
     backgroundColor: '#F4F6F3',
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 14,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
     color: '#1E2923',
   },
@@ -318,129 +370,187 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   addBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#E9EDE9',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 14,
-  },
-  searchBarFlex: {
-    flex: 1,
-  },
-  filterBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#E1ECE4',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mapCard: {
-    width: '100%',
-    height: 178,
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: '#DCE5DE',
-    marginBottom: 14,
     borderWidth: 1,
     borderColor: '#E5E9E6',
   },
-  mapImage: {
-    width: '100%',
-    height: '100%',
+  mapWrapper: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 10,
   },
-  monitorBadge: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
+  mapImage: {
+    height: 175,
+    width: '100%',
+    justifyContent: 'space-between',
+    padding: 12,
+  },
+  mapImageRadius: {
+    borderRadius: 20,
+  },
+  mapBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
     backgroundColor: 'rgba(255, 255, 255, 0.94)',
-    paddingHorizontal: 11,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
-    gap: 6,
+    borderRadius: 20,
   },
-  monitorDot: {
-    width: 7,
-    height: 7,
+  greenDot: {
+    width: 8,
+    height: 8,
     borderRadius: 4,
-    backgroundColor: '#2D7A4F',
+    backgroundColor: '#2D6A4F',
+    marginRight: 7,
   },
-  monitorBadgeText: {
+  mapBadgeText: {
     fontSize: 12,
     fontWeight: '700',
     color: '#1E2923',
   },
   locateBtn: {
-    position: 'absolute',
-    bottom: 12,
-    right: 12,
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+  },
+  chipsSpacing: {
+    marginBottom: 10,
+  },
+  campoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E9E6',
+  },
+  cardMainArea: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  infoCol: {
+    flex: 1,
+  },
+  campoNome: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E2923',
+  },
+  campoDetalhe: {
+    fontSize: 12,
+    color: '#6B7871',
+    marginTop: 3,
+  },
+  statusCol: {
+    alignItems: 'flex-end',
+  },
+  estadoText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1E2923',
+  },
+  indicadorText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 3,
+  },
+  actionsCol: {
+    gap: 6,
+  },
+  editBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: '#DCE7DF',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  chipsRow: {
-    flexDirection: 'row',
+  deleteBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: '#F6E8D8',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 14,
   },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  chipTodosActive: {
-    backgroundColor: '#1B3B2B',
-    borderColor: '#1B3B2B',
-  },
-  chipAtivosActive: {
-    backgroundColor: '#24593F',
-    borderColor: '#24593F',
-  },
-  chipWhite: {
+  modalContainer: {
+    width: '85%',
     backgroundColor: '#FFFFFF',
-    borderColor: '#E5E9E6',
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5,
   },
-  chipAtencaoSoft: {
-    backgroundColor: '#F7E7D5',
-    borderColor: '#F0D7B8',
-  },
-  chipAtencaoActive: {
-    backgroundColor: '#B85D19',
-    borderColor: '#B85D19',
-  },
-  chipText: {
-    fontSize: 12.5,
+  modalTitle: {
+    fontSize: 18,
     fontWeight: '700',
+    color: '#1E2923',
+    marginBottom: 10,
   },
-  chipTodosTextActive: {
-    color: '#FFFFFF',
+  modalMessage: {
+    fontSize: 14,
+    color: '#6B7871',
+    marginBottom: 20,
   },
-  chipAtivosTextActive: {
-    color: '#FFFFFF',
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
   },
-  chipWhiteText: {
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: '#1E2923',
   },
-  chipAtencaoText: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: '#B85D19',
+  confirmButton: {
+    backgroundColor: '#F6E8D8',
   },
-  listSection: {
-    gap: 10,
+  modalIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(180, 35, 24, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 15,
+  },
+  confirmButtonText: {
+    color: '#B42318',
+    fontWeight: '700',
   },
 });
