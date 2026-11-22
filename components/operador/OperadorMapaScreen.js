@@ -14,7 +14,7 @@ const FOTO_CAMPO = {
   uri: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80',
 };
 
-const PARCELAS_CAMPO = [
+export const PARCELAS_CAMPO = [
   {
     id: 'VP-01', nome: 'Parcela VP-01', cultura: 'Touriga Nacional',
     detalhe: 'Vinha · 5,8 ha', estado: 'Normal', cor: '#2D6A4F', bg: '#E3ECE6',
