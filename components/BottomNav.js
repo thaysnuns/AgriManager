@@ -3,44 +3,39 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const TABS = [
-  {
-    key: 'inicio',
-    label: 'Início',
-    icon: 'grid-outline',
-    iconActive: 'grid',
-  },
-  {
-    key: 'campos',
-    label: 'Campos',
-    icon: 'map-outline',
-    iconActive: 'map',
-  },
-  {
-    key: 'parcelas',
-    label: 'Parcelas',
-    icon: 'layers-outline',
-    iconActive: 'layers',
-  },
-  {
-    key: 'plantacoes',
-    label: 'Plantações',
-    icon: 'leaf-outline',
-    iconActive: 'leaf',
-  },
-  {
-    key: 'perfil',
-    label: 'Perfil',
-    icon: 'person-outline',
-    iconActive: 'person',
-  },
+const AGRICULTOR_TABS = [
+  { key: 'inicio', label: 'Início', icon: 'grid-outline', iconActive: 'grid' },
+  { key: 'campos', label: 'Campos', icon: 'map-outline', iconActive: 'map' },
+  { key: 'parcelas', label: 'Parcelas', icon: 'layers-outline', iconActive: 'layers' },
+  { key: 'plantacoes', label: 'Plantações', icon: 'leaf-outline', iconActive: 'leaf' },
+  { key: 'perfil', label: 'Perfil', icon: 'person-outline', iconActive: 'person' },
 ];
 
-export default function BottomNav({ activeTab = 'inicio', onSelectTab }) {
+const OPERADOR_TABS = [
+  { key: 'tarefas', label: 'Tarefas', icon: 'checkbox-outline', iconActive: 'checkbox' },
+  { key: 'scanner', label: 'Scanner', icon: 'scan-outline', iconActive: 'scan' },
+  { key: 'mapa', label: 'Mapa', icon: 'map-outline', iconActive: 'map' },
+  { key: 'perfil', label: 'Perfil', icon: 'person-outline', iconActive: 'person' },
+];
+
+const ADMINISTRADOR_TABS = [
+  { key: 'resumo', label: 'Resumo', icon: 'grid-outline', iconActive: 'grid' },
+  { key: 'utilizadores', label: 'Utilizadores', icon: 'people-outline', iconActive: 'people' },
+  { key: 'empresas', label: 'Empresas', icon: 'business-outline', iconActive: 'business' },
+  { key: 'campos', label: 'Campos', icon: 'map-outline', iconActive: 'map' },
+];
+
+export default function BottomNav({ activeTab = 'inicio', onSelectTab, role = 'agricultor' }) {
+  const tabs = role === 'operador'
+    ? OPERADOR_TABS
+    : role === 'administrador'
+    ? ADMINISTRADOR_TABS
+    : AGRICULTOR_TABS;
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.bar}>
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
             <TouchableOpacity
