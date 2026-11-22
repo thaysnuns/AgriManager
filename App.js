@@ -25,6 +25,7 @@ import EditarCamposScreen from './components/EditarCamposScreen';
 import OperadorTarefasScreen from './components/operador/OperadorTarefasScreen';
 import OperadorScannerScreen from './components/operador/OperadorScannerScreen';
 import OperadorParcelaScreen from './components/operador/OperadorParcelaScreen';
+import OperadorMapaScreen, { PARCELAS_CAMPO } from './components/operador/OperadorMapaScreen';
 import OperadorPerfilScreen from './components/operador/OperadorPerfilScreen';
 import OperadorTarefaDetalheScreen from './components/operador/OperadorTarefaDetalheScreen';
 import AdminDashboardScreen from './components/adm/AdminDashboardScreen';
@@ -75,6 +76,7 @@ export default function App() {
     setCampoEmEdicao(null);
     setMostrarTarefasNoPerfil(false);
     setAdminParcelaAtiva(null);
+    setOperadorParcelaAtiva(null);
     setMostrarCriarTarefa(false);
     setOrigemCriarTarefa('tarefas');
     setMostrarCriarParcela(false);
@@ -89,8 +91,6 @@ export default function App() {
       email: userData?.email,
     });
     resetSubNavegacao();
-    setOperadorParcelaAtiva(null);
-    setOperadorTarefaAtiva(null);
     setActiveTab(
       userData?.role === 'operador'
         ? 'tarefas'
@@ -191,7 +191,14 @@ export default function App() {
             {currentUser?.role === 'operador' && activeTab === 'scanner' && (
               <OperadorScannerScreen
                 onCodigo={(codigo) => {
-                  console.log('Código QR:', codigo);
+                  const limpo = (codigo || '').trim().toUpperCase();
+                  const correspondencia = limpo.match(/^([A-Z]{2})0*(\d+)-\d+$/);
+                  const idParcela = correspondencia
+                    ? `${correspondencia[1]}-${correspondencia[2].padStart(2, '0')}`
+                    : null;
+                  const parcela = PARCELAS_CAMPO.find((item) => item.id === idParcela);
+
+                  setOperadorParcelaAtiva(parcela || null);
                   setActiveTab('mapa');
                 }}
                 onHistorico={() => setActiveTab('tarefas')}
@@ -199,14 +206,23 @@ export default function App() {
             )}
 
             {currentUser?.role === 'operador' && activeTab === 'mapa' && (
-              <OperadorParcelaScreen
-                parcela={operadorParcelaAtiva || undefined}
-                onBack={() => setActiveTab('tarefas')}
-                onLerQR={() => setActiveTab('scanner')}
-                onNavegar={(tipo) => console.log('Navegar:', tipo)}
-                onContactar={() => console.log('Contactar responsável')}
-                onContinuar={() => setActiveTab('tarefas')}
-              />
+              operadorParcelaAtiva ? (
+                <OperadorParcelaScreen
+                  parcela={operadorParcelaAtiva}
+                  onBack={() => {
+                    setOperadorParcelaAtiva(null);
+                    setActiveTab('mapa');
+                  }}
+                  onLerQR={() => setActiveTab('scanner')}
+                  onNavegar={(tipo) => console.log('Navegar:', tipo)}
+                  onContactar={() => console.log('Contactar responsável')}
+                  onContinuar={() => setActiveTab('tarefas')}
+                />
+              ) : (
+                <OperadorMapaScreen
+                  onSelectParcela={(parcela) => setOperadorParcelaAtiva(parcela)}
+                />
+              )
             )}
 
             {currentUser?.role === 'operador' && activeTab === 'perfil' && (
