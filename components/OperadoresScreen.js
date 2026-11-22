@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-const OPERADORES_INICIAIS = [
+export const OPERADORES_INICIAIS = [
   { id: '1', iniciais: 'JS', nome: 'João Silva', email: 'joao@quintadovale.pt', estado: 'Ativo' },
   { id: '2', iniciais: 'SS', nome: 'Sofia Santos', email: 'sofia@quintadovale.pt', estado: 'Ativo' },
   { id: '3', iniciais: 'PF', nome: 'Pedro Ferreira', email: 'pedro@quintadovale.pt', estado: 'Ativo' },
